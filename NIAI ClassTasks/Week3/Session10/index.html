@@ -1,0 +1,3273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINEAR ALGEBRA PLAYGROUND</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS / THEMES
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0807;
+  --panel:#141010;
+  --panel2:#1b1512;
+  --panel3:#241c17;
+  --line:#33251c;
+  --line2:#4d3826;
+  --accent:#ff8a2b;
+  --accent-hi:#ffa254;
+  --accent-dim:#8a4a12;
+  --cream:#f6ead8;
+  --muted:#9a8270;
+  --dim:#6b5a4c;
+  --teal:#6fae9a;
+  --red:#e2603f;
+  --green:#8fbf7f;
+  --pixel:'Press Start 2P',monospace;
+  --mono:ui-monospace,'SFMono-Regular','Courier New',monospace;
+}
+body[data-theme="crt"]{
+  --bg:#050a05;--panel:#0a1208;--panel2:#101a0d;--panel3:#16261a;
+  --line:#1d3a25;--line2:#2d5a3d;
+  --accent:#66ff88;--accent-hi:#a6ffb8;--accent-dim:#1d5c30;
+  --cream:#d1fae5;--muted:#6b8e78;--dim:#4a6b58;
+  --teal:#57d9c0;--red:#ff7a7a;--green:#8fbf7f;
+}
+body[data-theme="mono"]{
+  --bg:#0a0a0a;--panel:#141414;--panel2:#1b1b1b;--panel3:#242424;
+  --line:#2a2a2a;--line2:#404040;
+  --accent:#e6e6e6;--accent-hi:#ffffff;--accent-dim:#666;
+  --cream:#f5f5f5;--muted:#9a9a9a;--dim:#5a5a5a;
+  --teal:#b0b0b0;--red:#e07070;--green:#c0c0c0;
+}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--cream);
+  font-family:var(--mono);
+  font-size:14px;
+  line-height:1.5;
+  overflow:hidden;
+  -webkit-font-smoothing:none;
+  transition:background .25s,color .25s;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,138,43,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,138,43,.028) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+body[data-theme="crt"]::before{
+  background-image:
+    linear-gradient(rgba(102,255,136,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(102,255,136,.04) 1px,transparent 1px);
+}
+body[data-theme="mono"]::before{
+  background-image:
+    linear-gradient(rgba(230,230,230,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(230,230,230,.03) 1px,transparent 1px);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.45) 100%);
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--line2);border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after{
+  animation:none !important;
+  transition-duration:.01ms !important;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app{display:flex;height:100vh;position:relative;z-index:1}
+
+.sidebar{
+  width:250px;flex:0 0 250px;
+  background:var(--bg);
+  border-right:2px solid var(--line);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  position:relative;z-index:20;
+}
+.logo{
+  padding:18px 16px 16px;
+  border-bottom:2px solid var(--line);
+  position:relative;
+}
+.logo::after{
+  content:'';position:absolute;left:16px;right:16px;bottom:-2px;height:2px;
+  background:repeating-linear-gradient(90deg,var(--accent-dim) 0 6px,transparent 6px 12px);
+}
+.logo-mark{
+  font-family:var(--pixel);font-size:18px;color:var(--accent);
+  letter-spacing:2px;margin-bottom:12px;
+  text-shadow:2px 2px 0 #000;display:block;
+}
+.logo-text{
+  font-family:var(--pixel);font-size:9px;line-height:2.1;color:var(--cream);
+  letter-spacing:1px;
+}
+.logo-text em{color:var(--accent);font-style:normal}
+
+.nav{padding:12px 8px 22px;display:flex;flex-direction:column;gap:3px}
+.nav-item{
+  position:relative;
+  display:flex;align-items:center;gap:9px;width:100%;
+  font-family:var(--pixel);font-size:7.5px;line-height:1.7;letter-spacing:.4px;
+  color:var(--muted);background:transparent;
+  border:2px solid transparent;padding:10px 9px;cursor:pointer;text-align:left;
+  transition:background .1s,color .1s,border-color .1s,transform .08s;
+}
+.nav-item .ico{font-size:10px;width:14px;text-align:center;flex:0 0 14px}
+.nav-item:hover{color:var(--cream);background:var(--panel2);border-color:var(--line)}
+.nav-item.active{
+  color:#120c07;background:var(--accent);border-color:var(--accent);
+  box-shadow:3px 3px 0 #000;
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;
+  border-left:6px solid var(--accent);
+}
+.nav-item:active{transform:translate(1px,1px)}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* ----- TOP BAR ----- */
+.topbar{
+  display:flex;align-items:center;gap:14px;
+  padding:0 18px;height:52px;
+  border-bottom:2px solid var(--line);
+  background:var(--bg);flex:0 0 auto;
+  position:relative;z-index:15;
+}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-mark{
+  font-family:var(--pixel);font-size:14px;color:var(--accent);
+  text-shadow:2px 2px 0 #000;flex:0 0 auto;
+}
+.tb-module{
+  font-family:var(--pixel);font-size:10px;color:var(--cream);
+  letter-spacing:1.5px;text-shadow:2px 2px 0 #000;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.tb-sep{width:2px;height:20px;background:var(--line);flex:0 0 auto}
+.tb-hint{
+  font-family:var(--mono);font-size:10.5px;color:var(--dim);
+  letter-spacing:.3px;white-space:nowrap;
+}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.status{
+  font-family:var(--pixel);font-size:7.5px;color:var(--green);
+  display:flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.status .dot{
+  width:7px;height:7px;background:var(--green);display:inline-block;
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--green);
+  animation:blink 1.6s steps(1,end) infinite;
+}
+@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.25}}
+
+.icon-btn{
+  font-family:var(--pixel);font-size:7.5px;letter-spacing:.6px;
+  background:var(--panel2);color:var(--cream);
+  border:2px solid var(--line2);
+  padding:8px 10px;cursor:pointer;
+  box-shadow:2px 2px 0 #000;
+  transition:background .1s,color .1s,border-color .1s,transform .06s,box-shadow .06s;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
+}
+.icon-btn:hover{background:var(--panel3);color:var(--accent);border-color:var(--accent)}
+.icon-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 #000}
+.icon-btn.on{background:var(--accent);color:#120c07;border-color:var(--accent)}
+
+/* ----- CONTENT ----- */
+.content{flex:1;overflow-y:auto;padding:22px 22px 34px;position:relative}
+
+/* ----- STATUS BAR ----- */
+.statusbar{
+  display:flex;align-items:center;
+  height:28px;background:var(--bg);
+  border-top:2px solid var(--line);
+  font-family:var(--pixel);font-size:7px;
+  letter-spacing:1px;color:var(--dim);
+  flex:0 0 auto;position:relative;z-index:15;
+}
+.sb-cell{
+  display:flex;align-items:center;gap:7px;
+  padding:0 14px;height:100%;
+  border-right:2px solid var(--line);
+}
+.sb-cell:last-child{border-right:none}
+.sb-spacer{flex:1}
+.sb-dot{
+  width:6px;height:6px;background:var(--green);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--green);
+}
+.sb-accent{color:var(--accent)}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+.panel{
+  background:var(--panel);
+  border:2px solid var(--line);
+  box-shadow:3px 3px 0 #000;
+  padding:14px;position:relative;
+  will-change:transform;
+  transition:box-shadow .12s,border-color .12s;
+}
+.panel.dragging{
+  box-shadow:6px 6px 0 #000, 0 0 0 2px var(--accent-dim);
+  border-color:var(--accent-dim);
+  transition:none;
+}
+.panel-title{
+  font-family:var(--pixel);font-size:8px;color:var(--accent);
+  letter-spacing:1px;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+  cursor:grab;user-select:none;touch-action:none;
+  position:relative;
+}
+.panel-title:hover{color:var(--accent-hi)}
+.panel-title:active{cursor:grabbing}
+.panel-title::before{
+  content:'⠿';color:var(--accent-dim);font-size:10px;flex:0 0 auto;
+  transition:color .12s;
+}
+.panel-title:hover::before{color:var(--accent)}
+.panel-title::after{
+  content:'';flex:1;height:2px;
+  background:repeating-linear-gradient(90deg,var(--line2) 0 4px,transparent 4px 8px);
+}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:14px}
+
+.field{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.field:last-child{margin-bottom:0}
+.lbl{
+  font-family:var(--pixel);font-size:7.5px;color:var(--muted);
+  flex:0 0 46px;letter-spacing:.5px;
+}
+input[type=number],input[type=text]{
+  font-family:var(--mono);font-size:13px;
+  background:var(--bg);color:var(--accent);
+  border:2px solid var(--line2);
+  padding:6px 8px;width:74px;outline:none;
+  transition:border-color .12s,box-shadow .12s;
+}
+input[type=text]{width:100%;color:var(--cream)}
+input[type=number]:focus,input[type=text]:focus{
+  border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,138,43,.18);
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:14px;background:transparent;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:6px;background:var(--bg);border:2px solid var(--line2);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:12px;height:16px;background:var(--accent);
+  border:2px solid var(--bg);margin-top:-7px;
+  transition:background .12s;
+}
+input[type=range]::-webkit-slider-thumb:hover{background:var(--accent-hi)}
+input[type=range]::-moz-range-track{height:6px;background:var(--bg);border:2px solid var(--line2)}
+input[type=range]::-moz-range-thumb{
+  width:12px;height:16px;background:var(--accent);border:2px solid var(--bg);border-radius:0;
+}
+
+.btn{
+  font-family:var(--pixel);font-size:7.5px;letter-spacing:.6px;
+  background:var(--panel2);color:var(--cream);
+  border:2px solid var(--line2);
+  padding:10px 12px;cursor:pointer;
+  box-shadow:3px 3px 0 #000;
+  transition:background .1s,color .1s,border-color .1s,transform .06s,box-shadow .06s;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--panel3);color:var(--accent);border-color:var(--accent)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 #000}
+.btn.primary{background:var(--accent);color:#120c07;border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hi);color:#120c07}
+.btn.on{background:var(--accent);color:#120c07;border-color:var(--accent)}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+
+.readout{display:flex;flex-direction:column;gap:8px}
+.ro{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border-bottom:1px dashed var(--line);padding-bottom:7px;
+}
+.ro:last-child{border-bottom:none;padding-bottom:0}
+.ro span{
+  font-family:var(--pixel);font-size:7.5px;color:var(--muted);letter-spacing:.5px;
+}
+.ro b{
+  font-family:var(--mono);font-size:15px;color:var(--accent);font-weight:400;
+  letter-spacing:.5px;
+}
+.ro b.small{font-size:12px}
+.ro b.good{color:var(--green)}
+.ro b.bad{color:var(--red)}
+.ro b.neutral{color:var(--cream)}
+
+.code-wrap{position:relative}
+.code{
+  font-family:var(--mono);font-size:12.5px;line-height:1.75;
+  background:var(--bg);border:2px solid var(--line);
+  border-left:4px solid var(--accent-dim);
+  padding:11px 12px;color:var(--muted);
+  white-space:pre-wrap;word-break:break-word;
+  overflow-x:auto;
+  padding-right:44px;
+}
+.copy-btn{
+  position:absolute;top:6px;right:6px;
+  font-family:var(--pixel);font-size:7px;letter-spacing:.4px;
+  background:var(--panel2);color:var(--muted);
+  border:2px solid var(--line2);
+  padding:5px 7px;cursor:pointer;
+  transition:background .1s,color .1s,border-color .1s;
+}
+.copy-btn:hover{background:var(--accent);color:#120c07;border-color:var(--accent)}
+.copy-btn.copied{background:var(--green);color:#0a0807;border-color:var(--green)}
+
+/* ----- CANVAS WRAP + TOOLBAR ----- */
+.canvas-wrap{
+  position:relative;margin-bottom:14px;
+}
+.canvas{
+  display:block;width:100%;height:390px;
+  border:2px solid var(--line);
+  box-shadow:3px 3px 0 #000, inset 0 0 0 2px #000;
+  background:var(--bg);
+  image-rendering:pixelated;
+  cursor:crosshair;
+}
+.canvas.tall{height:440px}
+.canvas-toolbar{
+  position:absolute;top:8px;right:8px;
+  display:flex;gap:4px;
+  background:rgba(0,0,0,.65);
+  border:2px solid var(--line);
+  padding:3px;
+  z-index:5;
+  backdrop-filter:blur(2px);
+}
+.tool-btn{
+  font-family:var(--pixel);font-size:8px;
+  background:var(--panel2);color:var(--cream);
+  border:2px solid var(--line2);
+  width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  transition:background .1s,color .1s,border-color .1s;
+}
+.tool-btn:hover{background:var(--accent);color:#120c07;border-color:var(--accent)}
+.tool-btn:active{transform:translate(1px,1px)}
+.canvas-coords{
+  position:absolute;bottom:8px;left:8px;
+  font-family:var(--mono);font-size:11px;
+  background:rgba(0,0,0,.7);
+  border:2px solid var(--line);
+  padding:3px 8px;color:var(--accent);
+  letter-spacing:.4px;
+  opacity:0;transition:opacity .15s;
+  pointer-events:none;
+}
+.canvas-wrap:hover .canvas-coords{opacity:1}
+
+.note{
+  border:2px solid var(--line);
+  border-left:4px solid var(--accent);
+  background:var(--panel);
+  padding:13px 15px 13px 15px;
+  font-size:12.5px;color:var(--muted);line-height:1.7;
+  position:relative;
+}
+.note b{color:var(--cream);font-weight:400}
+.note .hl{color:var(--accent)}
+.note-title{
+  font-family:var(--pixel);font-size:7.5px;color:var(--accent);
+  letter-spacing:1px;margin-bottom:9px;
+  padding-right:26px;
+  display:flex;align-items:center;gap:8px;
+}
+.note-toggle{
+  position:absolute;top:11px;right:11px;
+  width:20px;height:20px;
+  font-family:var(--pixel);font-size:9px;
+  background:var(--panel2);color:var(--muted);
+  border:2px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;line-height:1;
+  transition:background .1s,color .1s,border-color .1s;
+}
+.note-toggle:hover{background:var(--accent);color:#120c07;border-color:var(--accent)}
+.note-body{
+  overflow:hidden;
+  max-height:600px;
+  transition:max-height .3s,opacity .2s,margin .2s;
+  opacity:1;
+}
+.note.collapsed .note-body{
+  max-height:0;
+  opacity:0;
+  margin-top:-4px;
+}
+.note + .note{margin-top:12px}
+
+.sec-head{
+  display:flex;align-items:center;gap:16px;margin-bottom:18px;
+  border-bottom:2px solid var(--line);padding-bottom:12px;
+  position:relative;
+}
+.sec-head::after{
+  content:'';position:absolute;left:0;bottom:-2px;width:64px;height:2px;
+  background:var(--accent);
+}
+.sec-num{
+  font-family:var(--pixel);font-size:11px;color:var(--accent-dim);
+  border:2px solid var(--line);padding:6px 8px;background:var(--bg);
+  box-shadow:2px 2px 0 #000;
+}
+.sec-head h2{
+  font-family:var(--pixel);font-size:15px;color:var(--cream);
+  letter-spacing:1.5px;text-shadow:2px 2px 0 #000;
+}
+.sec-head .sec-hint{
+  margin-left:auto;font-family:var(--mono);font-size:10.5px;
+  color:var(--dim);letter-spacing:.3px;
+}
+
+.section{display:none}
+.section.active{display:block;animation:fade .2s steps(5,end)}
+@keyframes fade{from{opacity:.15}to{opacity:1}}
+
+/* ----- HERO ----- */
+.hero{
+  position:relative;overflow:hidden;
+  border:2px solid var(--line);
+  box-shadow:5px 5px 0 #000;
+  background:var(--bg);
+  margin-bottom:20px;
+  min-height:340px;
+}
+#cvHero{display:block;width:100%;height:340px;image-rendering:pixelated}
+.hero-inner{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:38px 42px;
+  background:linear-gradient(90deg,rgba(10,8,7,.96) 0%,rgba(10,8,7,.82) 45%,rgba(10,8,7,.10) 100%);
+  pointer-events:none;
+}
+body[data-theme="crt"] .hero-inner{
+  background:linear-gradient(90deg,rgba(5,10,5,.96) 0%,rgba(5,10,5,.82) 45%,rgba(5,10,5,.10) 100%);
+}
+body[data-theme="mono"] .hero-inner{
+  background:linear-gradient(90deg,rgba(10,10,10,.96) 0%,rgba(10,10,10,.82) 45%,rgba(10,10,10,.10) 100%);
+}
+.hero-inner > *{pointer-events:auto}
+.hero-tag{
+  font-family:var(--pixel);font-size:7.5px;color:var(--accent);
+  letter-spacing:2.5px;margin-bottom:20px;
+  display:inline-flex;align-items:center;gap:9px;
+}
+.hero-tag::before{
+  content:'';display:block;width:18px;height:2px;background:var(--accent);
+}
+.hero-title{
+  font-family:var(--pixel);font-size:30px;color:var(--cream);
+  letter-spacing:3px;line-height:1.45;
+  text-shadow:4px 4px 0 #000, 8px 8px 0 rgba(138,74,18,.35);
+}
+.hero-title em{font-style:normal;color:var(--accent)}
+.hero-sub{
+  margin-top:20px;max-width:540px;
+  font-size:13.5px;color:var(--muted);line-height:1.8;
+  letter-spacing:.2px;
+}
+.hero-actions{margin-top:26px;display:flex;gap:11px;flex-wrap:wrap}
+.hero-actions .btn{padding:12px 16px;font-size:8px}
+
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;
+}
+.card{
+  position:relative;
+  display:flex;align-items:center;gap:13px;
+  background:var(--panel);border:2px solid var(--line);
+  box-shadow:3px 3px 0 #000;
+  padding:16px 14px;cursor:pointer;text-align:left;
+  font-family:var(--pixel);font-size:8px;color:var(--cream);
+  letter-spacing:.6px;line-height:1.6;
+  transition:border-color .12s,background .12s,transform .08s,box-shadow .08s;
+  overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent-dim);transition:background .12s;
+}
+.card:hover{
+  border-color:var(--accent);background:var(--panel2);
+  color:var(--accent);box-shadow:5px 5px 0 #000;
+}
+.card:hover::before{background:var(--accent)}
+.card:active{transform:translate(3px,3px);box-shadow:0 0 0 #000}
+.card-num{color:var(--accent-dim);flex:0 0 auto;font-size:7.5px}
+.card:hover .card-num{color:var(--accent)}
+.card-ico{
+  margin-left:auto;color:var(--line2);font-size:13px;
+  transition:color .12s,transform .12s;
+}
+.card:hover .card-ico{color:var(--accent);transform:translateX(3px)}
+
+/* ----- TERMINAL ----- */
+.term{
+  border:2px solid var(--line);box-shadow:3px 3px 0 #000;background:var(--bg);
+  position:relative;
+}
+.term-head{
+  font-family:var(--pixel);font-size:8.5px;color:var(--accent);
+  padding:12px 14px;border-bottom:2px solid var(--line);
+  letter-spacing:1px;
+  cursor:grab;user-select:none;touch-action:none;
+  display:flex;align-items:center;gap:9px;
+}
+.term-head::before{content:'⠿';color:var(--accent-dim);font-size:10px}
+.term-head:hover{color:var(--accent-hi)}
+.term-head:hover::before{color:var(--accent)}
+.term-head:active{cursor:grabbing}
+.term-body{
+  height:320px;overflow-y:auto;padding:13px 14px;
+  font-family:var(--mono);font-size:13px;line-height:1.7;
+}
+.term-line{margin-bottom:13px;border-left:3px solid var(--line);padding-left:11px}
+.term-code{color:var(--accent)}
+.term-res{color:var(--cream);white-space:pre-wrap;word-break:break-word}
+.term-err{color:var(--red)}
+
+/* ----- CHIPS / GROUPS ----- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.chip{
+  font-family:var(--mono);font-size:12px;
+  border:2px solid var(--line2);background:var(--bg);
+  padding:3px 8px;color:var(--cream);
+}
+.chip .dot{display:inline-block;width:7px;height:7px;margin-right:6px;vertical-align:middle}
+.group-box{
+  border:2px solid var(--line);background:var(--panel);padding:12px;margin-bottom:11px;
+}
+.group-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:var(--pixel);font-size:7.5px;letter-spacing:.8px;margin-bottom:10px;
+}
+.group-head .badge{
+  font-family:var(--pixel);font-size:7px;padding:4px 7px;
+  border:2px solid currentColor;
+}
+.badge.sim{color:var(--green)}
+.badge.opp{color:var(--red)}
+
+/* ----- TOAST ----- */
+#toast{
+  position:fixed;left:50%;bottom:48px;transform:translate(-50%,24px);
+  font-family:var(--pixel);font-size:7.5px;letter-spacing:1px;
+  background:var(--accent);color:#120c07;
+  padding:12px 18px;border:2px solid #000;
+  box-shadow:4px 4px 0 #000;
+  opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;
+  z-index:200;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+.angle-label{
+  font-family:var(--pixel);font-size:7.5px;color:var(--muted);letter-spacing:.5px;
+  display:flex;justify-content:space-between;margin-bottom:6px;
+}
+
+/* ----- HELP OVERLAY ----- */
+#helpOverlay{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.8);
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+}
+#helpOverlay.show{display:flex}
+.help-card{
+  background:var(--panel);
+  border:2px solid var(--accent);
+  box-shadow:6px 6px 0 #000;
+  padding:22px 24px;
+  max-width:560px;width:100%;
+  max-height:80vh;overflow-y:auto;
+}
+.help-title{
+  font-family:var(--pixel);font-size:12px;color:var(--accent);
+  letter-spacing:2px;margin-bottom:18px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.help-title button{
+  background:transparent;border:2px solid var(--line2);
+  color:var(--muted);font-family:var(--pixel);font-size:9px;
+  width:24px;height:24px;cursor:pointer;
+}
+.help-title button:hover{border-color:var(--accent);color:var(--accent)}
+.help-grid{
+  display:grid;grid-template-columns:auto 1fr;gap:9px 18px;
+  font-family:var(--mono);font-size:12.5px;
+}
+.help-grid .key{
+  font-family:var(--pixel);font-size:8px;color:var(--accent);
+  background:var(--bg);border:2px solid var(--line2);
+  padding:4px 7px;letter-spacing:.5px;
+  white-space:nowrap;justify-self:start;
+}
+.help-grid .desc{color:var(--muted);align-self:center}
+.help-sep{
+  grid-column:1/-1;height:2px;
+  background:repeating-linear-gradient(90deg,var(--line2) 0 4px,transparent 4px 8px);
+  margin:4px 0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1100px){
+  .tb-hint{display:none}
+}
+@media (max-width:900px){
+  html,body{overflow:auto}
+  .app{flex-direction:column;height:auto;min-height:100vh}
+  .sidebar{
+    width:100%;flex:0 0 auto;border-right:none;border-bottom:2px solid var(--line);
+    max-height:none;
+  }
+  .nav{flex-direction:row;flex-wrap:wrap;padding:8px}
+  .nav-item{width:auto;font-size:7px;padding:8px 7px}
+  .nav-item .ico{display:none}
+  .nav-item.active::before{display:none}
+  .content{overflow:visible;padding:16px}
+  .main{min-height:0}
+  .canvas{height:300px}
+  .canvas.tall{height:340px}
+  #cvHero{height:280px}
+  .hero-inner{padding:24px}
+  .hero-title{font-size:18px;letter-spacing:2px}
+  .hero-sub{font-size:12.5px;max-width:100%}
+  .hero-tag{font-size:7px}
+  .status{display:none}
+  .statusbar{display:none}
+}
+@media (max-width:560px){
+  .tb-module{font-size:9px}
+  .sec-head .sec-hint{display:none}
+  .hero-title{font-size:15px}
+  .hero-actions .btn{padding:10px 12px;font-size:7px}
+  .icon-btn span.label{display:none}
+}
+</style>
+</head>
+<body data-theme="amber">
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-mark">▣</span>
+      <div class="logo-text">LINEAR<br><em>ALGEBRA</em><br>PLAYGROUND</div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-go="dashboard" title="Dashboard (G)"><span class="ico">🏠</span>DASHBOARD</button>
+      <button class="nav-item" data-go="vectors" title="Vectors (1)"><span class="ico">➜</span>VECTORS</button>
+      <button class="nav-item" data-go="operations" title="Vector Operations (2)"><span class="ico">✚</span>VECTOR OPERATIONS</button>
+      <button class="nav-item" data-go="dot" title="Dot Product (3)"><span class="ico">◉</span>DOT PRODUCT</button>
+      <button class="nav-item" data-go="cross" title="Cross Product (4)"><span class="ico">✕</span>CROSS PRODUCT</button>
+      <button class="nav-item" data-go="matrices" title="Matrices (5)"><span class="ico">▦</span>MATRICES</button>
+      <button class="nav-item" data-go="determinant" title="Determinant (6)"><span class="ico">◇</span>DETERMINANT</button>
+      <button class="nav-item" data-go="rotation" title="Rotation (7)"><span class="ico">⟳</span>ROTATION</button>
+      <button class="nav-item" data-go="eigen" title="Eigenvectors (8)"><span class="ico">λ</span>EIGENVECTORS</button>
+      <button class="nav-item" data-go="grouping" title="Direction Grouping (9)"><span class="ico">≈</span>DIRECTION GROUPING</button>
+      <button class="nav-item" data-go="numpy" title="NumPy Playground (0)"><span class="ico">&lt;/&gt;</span>NUMPY PLAYGROUND</button>
+    </nav>
+  </aside>
+
+  <div class="main">
+
+    <header class="topbar">
+      <div class="tb-left">
+        <span class="tb-mark">▣</span>
+        <span class="tb-module" id="tbModule">DASHBOARD</span>
+        <span class="tb-sep"></span>
+      
+      </div>
+      <div class="tb-right">
+        <!-- <div class="status"><i class="dot"></i>SYSTEM READY</div> -->
+        <button class="icon-btn" id="btnTheme" title="Cycle theme (T)">◐ <span class="label" id="themeLabel">AMBER</span></button>
+        <button class="icon-btn" id="btnMotion" title="Toggle reduced motion (M)">◉ <span class="label">MOTION</span></button>
+        <button class="icon-btn" id="btnHelp" title="Help (?)">? <span class="label">HELP</span></button>
+        <button class="icon-btn" id="btnResetLayout" title="Restore panel positions">⟲ <span class="label">LAYOUT</span></button>
+        <button class="icon-btn" id="btnReset" title="Reset current module">R <span class="label">RESET</span></button>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+
+      <!-- DASHBOARD -->
+      <section id="sec-dashboard" class="section active">
+        <div class="hero">
+          <canvas id="cvHero"></canvas>
+          <div class="hero-inner">
+            <div class="hero-tag">INTERACTIVE MATH LAB</div>
+            <h1 class="hero-title">LINEAR<br><em>ALGEBRA</em><br>PLAYGROUND</h1>
+            <p class="hero-sub">
+              Explore vectors, matrices and eigenvectors through live
+              canvas simulations. Move a slider, watch the geometry respond.
+            </p>
+            <div class="hero-actions">
+              <button class="btn primary" data-go="vectors">START EXPLORING →</button>
+              <button class="btn" data-go="numpy">&lt;/&gt; NUMPY PLAYGROUND</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards">
+          <button class="card" data-go="vectors"><span class="card-num">[01]</span>VECTORS<span class="card-ico">➜</span></button>
+          <button class="card" data-go="operations"><span class="card-num">[02]</span>OPERATIONS<span class="card-ico">✚</span></button>
+          <button class="card" data-go="dot"><span class="card-num">[03]</span>DOT PRODUCT<span class="card-ico">◉</span></button>
+          <button class="card" data-go="cross"><span class="card-num">[04]</span>CROSS PRODUCT<span class="card-ico">✕</span></button>
+          <button class="card" data-go="matrices"><span class="card-num">[05]</span>MATRICES<span class="card-ico">▦</span></button>
+          <button class="card" data-go="determinant"><span class="card-num">[06]</span>DETERMINANT<span class="card-ico">◇</span></button>
+          <button class="card" data-go="rotation"><span class="card-num">[07]</span>ROTATION<span class="card-ico">⟳</span></button>
+          <button class="card" data-go="eigen"><span class="card-num">[08]</span>EIGENVECTORS<span class="card-ico">λ</span></button>
+          <button class="card" data-go="grouping"><span class="card-num">[09]</span>DIRECTION GROUPING<span class="card-ico">≈</span></button>
+          <button class="card" data-go="numpy"><span class="card-num">[10]</span>NUMPY<span class="card-ico">&lt;/&gt;</span></button>
+        </div>
+      </section>
+
+      <!-- 01 VECTORS -->
+      <section id="sec-vectors" class="section">
+        <div class="sec-head">
+          <span class="sec-num">01</span>
+          <h2>VECTORS</h2>
+          <span class="sec-hint">direction + magnitude</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">VECTOR A</div>
+            <div class="field">
+              <span class="lbl">X</span>
+              <input type="number" id="vx" value="3" step="1">
+              <input type="range" id="vx_r" min="-10" max="10" step="0.5" value="3">
+            </div>
+            <div class="field">
+              <span class="lbl">Y</span>
+              <input type="number" id="vy" value="4" step="1">
+              <input type="range" id="vy_r" min="-10" max="10" step="0.5" value="4">
+            </div>
+            <div class="btn-row" style="margin-top:12px">
+              <button class="btn" id="vRand">RANDOMIZE</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">READOUT</div>
+            <div class="readout">
+              <div class="ro"><span>MAGNITUDE</span><b id="vMag">5.00</b></div>
+              <div class="ro"><span>UNIT VECTOR</span><b class="small" id="vUnit">[0.60, 0.80]</b></div>
+              <div class="ro"><span>DIRECTION</span><b class="small" id="vAng">53.13°</b></div>
+              <div class="ro"><span>COMPONENTS</span><b class="small" id="vComp">[3, 4]</b></div>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="cvVectors" class="canvas"></canvas>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="note">
+            <div class="note-title">WHAT'S HAPPENING?</div>
+            <div class="note-body">
+              <b>VECTOR = DIRECTION + MAGNITUDE</b><br>
+              The arrow starts at the origin and ends at <span class="hl">(x, y)</span>.
+              Its length is <span class="hl">√(x² + y²)</span> — that's the magnitude.
+              Divide the vector by its magnitude and you get the <b>unit vector</b>:
+              the same direction with length exactly 1.
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="vecCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            A word embedding in NLP is a vector in a few-hundred-dimensional space.
+            A pixel gradient in Computer Vision is a vector. A velocity in a game engine
+            is a vector. <b>Normalizing</b> vectors is the first step of almost every
+            similarity search and ML pipeline.
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 VECTOR OPERATIONS -->
+      <section id="sec-operations" class="section">
+        <div class="sec-head">
+          <span class="sec-num">02</span>
+          <h2>VECTOR OPERATIONS</h2>
+          <span class="sec-hint">add · subtract · scale</span>
+        </div>
+
+        <div class="grid3">
+          <div class="panel">
+            <div class="panel-title">VECTOR A</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="oax" value="2" step="1"><input type="range" id="oax_r" min="-8" max="8" step="0.5" value="2"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="oay" value="3" step="1"><input type="range" id="oay_r" min="-8" max="8" step="0.5" value="3"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">VECTOR B</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="obx" value="4" step="1"><input type="range" id="obx_r" min="-8" max="8" step="0.5" value="4"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="oby" value="1" step="1"><input type="range" id="oby_r" min="-8" max="8" step="0.5" value="1"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">SCALAR k</div>
+            <div class="field"><span class="lbl">k</span><input type="number" id="ok" value="2" step="0.5"><input type="range" id="ok_r" min="-4" max="4" step="0.25" value="2"></div>
+            <div class="btn-row" style="margin-top:10px">
+              <button class="btn primary" data-op="add">A + B</button>
+              <button class="btn" data-op="sub">A − B</button>
+              <button class="btn" data-op="scale">SCALAR × A</button>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="cvOps" class="canvas"></canvas>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="panel">
+            <div class="panel-title">RESULT</div>
+            <div class="readout">
+              <div class="ro"><span id="opLabel">A + B</span><b id="opRes">[6.00, 4.00]</b></div>
+              <div class="ro"><span>MAGNITUDE</span><b id="opMag">7.21</b></div>
+              <div class="ro"><span>FORMULA</span><b class="small" id="opFormula">[2+4, 3+1]</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="opsCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            <b>Addition</b> places B's tail at A's tip (the parallelogram rule).
+            <b>Subtraction</b> points from B to A. <b>Scalar multiplication</b> stretches
+            or flips the arrow without changing its line.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            In Machine Learning, <b>gradient descent</b> literally does
+            <span class="hl">weights = weights − learning_rate × gradient</span>.
+            That's vector subtraction plus a scalar multiply, repeated a million times.
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 DOT PRODUCT -->
+      <section id="sec-dot" class="section">
+        <div class="sec-head">
+          <span class="sec-num">03</span>
+          <h2>DOT PRODUCT</h2>
+          <span class="sec-hint">similarity &amp; angle</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">VECTOR A</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="dax" value="2" step="1"><input type="range" id="dax_r" min="-8" max="8" step="0.5" value="2"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="day" value="3" step="1"><input type="range" id="day_r" min="-8" max="8" step="0.5" value="3"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">VECTOR B</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="dbx" value="4" step="1"><input type="range" id="dbx_r" min="-8" max="8" step="0.5" value="4"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="dby" value="1" step="1"><input type="range" id="dby_r" min="-8" max="8" step="0.5" value="1"></div>
+          </div>
+        </div>
+
+        <canvas id="cvDot" class="canvas"></canvas>
+
+        <div class="grid3" style="margin-top:14px">
+          <div class="panel">
+            <div class="panel-title">DOT PRODUCT</div>
+            <div class="readout">
+              <div class="ro"><span>A · B</span><b id="dotVal">11.00</b></div>
+              <div class="ro"><span>ANGLE</span><b class="small" id="dotAngle">36.87°</b></div>
+              <div class="ro"><span>COSINE SIM</span><b class="small" id="dotCos">0.86</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">DIRECTION</div>
+            <div class="readout">
+              <div class="ro"><span>STATUS</span><b id="dotStatus">◉ SIMILAR</b></div>
+              <div class="ro"><span>PROJECTION</span><b class="small" id="dotProj">3.24</b></div>
+              <div class="ro"><span>ORTHOGONAL?</span><b class="small" id="dotOrtho">NO</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="dotCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            <b>A · B = |A||B|cos(θ)</b>. When the vectors point the same way the dot
+            product is large and positive. At 90° it is exactly <b>0</b>. When they point
+            opposite ways it goes negative. Divide by both magnitudes and you get
+            <span class="hl">cosine similarity</span> — a number between −1 and 1 that
+            ignores length entirely.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            Cosine similarity powers <b>semantic search</b>, <b>recommendation systems</b>,
+            <b>RAG pipelines</b> and <b>vector databases</b>. Every time you search
+            "similar documents", something is computing dot products at scale.
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 CROSS PRODUCT -->
+      <section id="sec-cross" class="section">
+        <div class="sec-head">
+          <span class="sec-num">04</span>
+          <h2>CROSS PRODUCT</h2>
+          <span class="sec-hint">perpendicular vector &amp; area</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">VECTOR A</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="cax" value="1" step="1"><input type="range" id="cax_r" min="-6" max="6" step="0.5" value="1"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="cay" value="2" step="1"><input type="range" id="cay_r" min="-6" max="6" step="0.5" value="2"></div>
+            <div class="field"><span class="lbl">Z</span><input type="number" id="caz" value="3" step="1"><input type="range" id="caz_r" min="-6" max="6" step="0.5" value="3"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">VECTOR B</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="cbx" value="4" step="1"><input type="range" id="cbx_r" min="-6" max="6" step="0.5" value="4"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="cby" value="5" step="1"><input type="range" id="cby_r" min="-6" max="6" step="0.5" value="5"></div>
+            <div class="field"><span class="lbl">Z</span><input type="number" id="cbz" value="6" step="1"><input type="range" id="cbz_r" min="-6" max="6" step="0.5" value="6"></div>
+          </div>
+        </div>
+
+        <canvas id="cvCross" class="canvas tall"></canvas>
+
+        <div class="grid3" style="margin-top:14px">
+          <div class="panel">
+            <div class="panel-title">A × B</div>
+            <div class="readout">
+              <div class="ro"><span>RESULT</span><b class="small" id="crossVec">[-3.00, 6.00, -3.00]</b></div>
+              <div class="ro"><span>|A × B|</span><b id="crossMag">7.35</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">GEOMETRY</div>
+            <div class="readout">
+              <div class="ro"><span>AREA PARALLELOGRAM</span><b id="crossArea">7.35</b></div>
+              <div class="ro"><span>|A| · |B|</span><b class="small" id="crossAB">29.65</b></div>
+              <div class="ro"><span>sin(θ)</span><b class="small" id="crossSin">0.25</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="crossCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            The cross product takes two 3D vectors and returns a third one that is
+            <b>perpendicular to both</b>. Its length equals the <b>area of the
+            parallelogram</b> they span. If the vectors are parallel, the result is
+            the zero vector.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            Cross products compute <b>surface normals</b> in 3D graphics and ray tracing,
+            determine <b>winding order</b> in mesh rendering, and solve torque and
+            angular momentum problems in physics engines.
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 MATRICES -->
+      <section id="sec-matrices" class="section">
+        <div class="sec-head">
+          <span class="sec-num">05</span>
+          <h2>MATRICES</h2>
+          <span class="sec-hint">linear transformations</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">MATRIX M (2×2)</div>
+            <div class="field">
+              <span class="lbl">ROW 1</span>
+              <input type="number" id="m00" value="2" step="0.5"><input type="range" id="m00_r" min="-3" max="3" step="0.1" value="2">
+              <input type="number" id="m01" value="0" step="0.5"><input type="range" id="m01_r" min="-3" max="3" step="0.1" value="0">
+            </div>
+            <div class="field">
+              <span class="lbl">ROW 2</span>
+              <input type="number" id="m10" value="0" step="0.5"><input type="range" id="m10_r" min="-3" max="3" step="0.1" value="0">
+              <input type="number" id="m11" value="1" step="0.5"><input type="range" id="m11_r" min="-3" max="3" step="0.1" value="1">
+            </div>
+            <div class="field" style="margin-top:12px">
+              <span class="lbl">VEC V</span>
+              <input type="number" id="mvx" value="1" step="1"><input type="range" id="mvx_r" min="-6" max="6" step="0.5" value="1">
+              <input type="number" id="mvy" value="2" step="1"><input type="range" id="mvy_r" min="-6" max="6" step="0.5" value="2">
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">PRESETS</div>
+            <div class="btn-row">
+              <button class="btn" data-preset="stretch">STRETCH</button>
+              <button class="btn" data-preset="shrink">SHRINK</button>
+              <button class="btn" data-preset="rotate">ROTATE</button>
+              <button class="btn" data-preset="reflect">REFLECT</button>
+              <button class="btn" data-preset="shear">SHEAR</button>
+              <button class="btn" data-preset="identity">IDENTITY</button>
+            </div>
+            <div style="height:12px"></div>
+            <button class="btn primary" id="btnApply" style="width:100%">▶ APPLY MATRIX</button>
+          </div>
+        </div>
+
+        <canvas id="cvMat" class="canvas"></canvas>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="panel">
+            <div class="panel-title">BEFORE → AFTER</div>
+            <div class="readout">
+              <div class="ro"><span>BEFORE</span><b class="small" id="matBefore">[1.00, 2.00]</b></div>
+              <div class="ro"><span>AFTER</span><b id="matAfter">[2.00, 2.00]</b></div>
+              <div class="ro"><span>DET (AREA ×)</span><b class="small" id="matDet">2.00</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="matCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            A matrix is a <b>machine that moves space</b>. Multiply it by a vector and
+            the vector lands somewhere new. The columns of the matrix tell you where
+            the basis vectors <span class="hl">î = (1,0)</span> and
+            <span class="hl">ĵ = (0,1)</span> end up. Every other vector follows along.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            Every layer of a neural network is a matrix multiply plus a bias.
+            Every 3D object on screen is placed by a matrix. Every image filter is a
+            small matrix called a kernel.
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 DETERMINANT -->
+      <section id="sec-determinant" class="section">
+        <div class="sec-head">
+          <span class="sec-num">06</span>
+          <h2>DETERMINANT</h2>
+          <span class="sec-hint">area scale factor</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">MATRIX A (2×2)</div>
+            <div class="field">
+              <span class="lbl">ROW 1</span>
+              <input type="number" id="d00" value="2" step="0.5"><input type="range" id="d00_r" min="-4" max="4" step="0.1" value="2">
+              <input type="number" id="d01" value="1" step="0.5"><input type="range" id="d01_r" min="-4" max="4" step="0.1" value="1">
+            </div>
+            <div class="field">
+              <span class="lbl">ROW 2</span>
+              <input type="number" id="d10" value="1" step="0.5"><input type="range" id="d10_r" min="-4" max="4" step="0.1" value="1">
+              <input type="number" id="d11" value="3" step="0.5"><input type="range" id="d11_r" min="-4" max="4" step="0.1" value="3">
+            </div>
+            <div style="margin-top:12px">
+              <pre class="code" id="detMatrix"></pre>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">RESULT</div>
+            <div class="readout">
+              <div class="ro"><span>DETERMINANT</span><b id="detVal">5.00</b></div>
+              <div class="ro"><span>AREA SCALE</span><b class="small" id="detScale">×5.00</b></div>
+              <div class="ro"><span>MATRIX STATUS</span><b class="small" id="detStatus">NON-SINGULAR</b></div>
+              <div class="ro"><span>ORIENTATION</span><b class="small" id="detOrient">PRESERVED</b></div>
+            </div>
+            <div style="height:12px"></div>
+            <div class="btn-row">
+              <button class="btn" data-det="collapse">COLLAPSE (det=0)</button>
+              <button class="btn" data-det="flip">FLIP (det&lt;0)</button>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="cvDet" class="canvas"></canvas>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="note">
+            <div class="note-title">WHAT'S HAPPENING?</div>
+            <div class="note-body">
+              <b>det(A) = ad − bc</b>. It tells you how much the transformation
+              <b>scales area</b>. A det of 5 means every shape gets 5× bigger.
+              A det of 0 means the whole plane was squashed onto a single line —
+              <span class="hl">space collapsed</span> and the matrix cannot be inverted.
+              A negative det means space was <b>flipped</b> like a mirror.
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="detCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            A determinant of zero means <b>no unique solution exists</b> — critical in
+            optimization and regression. In Graphics, determinants decide whether a
+            triangle is front-facing or back-facing. In ML, near-zero determinants
+            signal unstable, ill-conditioned models.
+          </div>
+        </div>
+      </section>
+
+      <!-- 07 ROTATION -->
+      <section id="sec-rotation" class="section">
+        <div class="sec-head">
+          <span class="sec-num">07</span>
+          <h2>ROTATION</h2>
+          <span class="sec-hint">rotating around the origin</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">VECTOR A</div>
+            <div class="field"><span class="lbl">X</span><input type="number" id="rax" value="3" step="1"><input type="range" id="rax_r" min="-8" max="8" step="0.5" value="3"></div>
+            <div class="field"><span class="lbl">Y</span><input type="number" id="ray" value="2" step="1"><input type="range" id="ray_r" min="-8" max="8" step="0.5" value="2"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">ANGLE</div>
+            <div class="angle-label"><span>0°</span><span id="rotAngleLabel">45°</span><span>360°</span></div>
+            <input type="range" id="rotR" min="0" max="360" step="1" value="45" style="width:100%">
+            <div class="btn-row" style="margin-top:12px">
+              <button class="btn primary" id="rotPlay">▶ PLAY</button>
+              <button class="btn" id="rotZero">RESET 0°</button>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="cvRot" class="canvas"></canvas>
+
+        <div class="grid3" style="margin-top:14px">
+          <div class="panel">
+            <div class="panel-title">ORIGINAL</div>
+            <div class="readout">
+              <div class="ro"><span>VECTOR A</span><b class="small" id="rotOrig">[3.00, 2.00]</b></div>
+              <div class="ro"><span>MAGNITUDE</span><b class="small" id="rotOrigMag">3.61</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">ROTATED</div>
+            <div class="readout">
+              <div class="ro"><span>VECTOR A′</span><b class="small" id="rotNew">[0.71, 3.54]</b></div>
+              <div class="ro"><span>MAGNITUDE</span><b class="small" id="rotNewMag">3.61</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">NUMPY</div>
+            <div class="code-wrap">
+              <pre class="code" id="rotCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            Rotation keeps the <b>length unchanged</b> and only changes the direction.
+            It's a matrix multiply:
+            <span class="hl">[[cos θ, −sin θ], [sin θ, cos θ]] · A</span>.
+            Notice the magnitude readout never changes, no matter the angle.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            Rotation matrices place cameras in 3D engines, align satellite imagery,
+            augment training data (rotated images), and implement positional encoding
+            in modern transformer architectures.
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 EIGENVECTORS -->
+      <section id="sec-eigen" class="section">
+        <div class="sec-head">
+          <span class="sec-num">08</span>
+          <h2>EIGENVECTORS</h2>
+          <span class="sec-hint">directions that survive transformation</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">MATRIX A (2×2)</div>
+            <div class="field">
+              <span class="lbl">ROW 1</span>
+              <input type="number" id="e00" value="2" step="0.5"><input type="range" id="e00_r" min="-4" max="4" step="0.1" value="2">
+              <input type="number" id="e01" value="0" step="0.5"><input type="range" id="e01_r" min="-4" max="4" step="0.1" value="0">
+            </div>
+            <div class="field">
+              <span class="lbl">ROW 2</span>
+              <input type="number" id="e10" value="0" step="0.5"><input type="range" id="e10_r" min="-4" max="4" step="0.1" value="0">
+              <input type="number" id="e11" value="3" step="0.5"><input type="range" id="e11_r" min="-4" max="4" step="0.1" value="3">
+            </div>
+            <div class="btn-row" style="margin-top:12px">
+              <button class="btn" data-eig="diag">DIAGONAL</button>
+              <button class="btn" data-eig="sym">SYMMETRIC</button>
+              <button class="btn" data-eig="shear">SHEAR</button>
+              <button class="btn" data-eig="rot">ROTATE 90°</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">EIGENVALUES</div>
+            <div class="readout">
+              <div class="ro"><span>λ₁</span><b id="eigL1">2.00</b></div>
+              <div class="ro"><span>λ₂</span><b id="eigL2">3.00</b></div>
+            </div>
+            <div style="height:12px"></div>
+            <div class="panel-title">EIGENVECTORS</div>
+            <div class="readout">
+              <div class="ro"><span>v₁</span><b class="small" id="eigV1">[1.00, 0.00]</b></div>
+              <div class="ro"><span>v₂</span><b class="small" id="eigV2">[0.00, 1.00]</b></div>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="cvEig" class="canvas"></canvas>
+
+        <div class="grid2" style="margin-top:14px">
+          <div class="note">
+            <div class="note-title">EIGENVECTOR</div>
+            <div class="note-body">
+              A direction that <b>stays on the same line</b> after transformation.
+              It may get longer, shorter, or flip — but it never leaves its own line.
+            </div>
+          </div>
+          <div class="note">
+            <div class="note-title">EIGENVALUE</div>
+            <div class="note-body">
+              How much that direction <b>stretches or shrinks</b>.
+              λ = 3 means it triples. λ = 0.5 means it halves.
+              λ = −1 means it flips to the opposite side.
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:12px">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            <b>PCA</b> (Principal Component Analysis) finds the eigenvectors of a
+            covariance matrix to reduce dimensionality. <b>PageRank</b> is an eigenvector
+            of the web graph. Spectral clustering, stability analysis of neural nets,
+            and vibration modes in physics engines all live here.
+          </div>
+        </div>
+      </section>
+
+      <!-- 09 GROUPING -->
+      <section id="sec-grouping" class="section">
+        <div class="sec-head">
+          <span class="sec-num">09</span>
+          <h2>GROUPING BY DIRECTION</h2>
+          <span class="sec-hint">cosine similarity clustering</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">ADD VECTOR</div>
+            <div class="field">
+              <span class="lbl">X, Y</span>
+              <input type="text" id="grpInput" placeholder="e.g. 2, 3" value="2, 3">
+            </div>
+            <div class="btn-row" style="margin-top:10px">
+              <button class="btn primary" id="grpAdd">+ ADD</button>
+              <button class="btn" id="grpRandom">RANDOM</button>
+              <button class="btn" id="grpClear">CLEAR ALL</button>
+            </div>
+            <div style="height:12px"></div>
+            <div class="panel-title">VECTORS</div>
+            <div class="chips" id="grpList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">GROUPS FOUND</div>
+            <div id="grpGroups"></div>
+          </div>
+        </div>
+
+        <canvas id="cvGrp" class="canvas"></canvas>
+
+        <div class="note" style="margin-top:14px">
+          <div class="note-title">WHAT'S HAPPENING?</div>
+          <div class="note-body">
+            Each vector is compared with the representative direction of every existing
+            group using <b>cosine similarity</b>. If <span class="hl">|cos| ≥ 0.85</span>
+            the vector belongs to that group — either pointing the <b>same way</b>
+            (similar) or the <b>exact opposite way</b> (opposite). Otherwise a brand new
+            group is created.
+          </div>
+        </div>
+        <div class="note">
+          <div class="note-title">WHY IT MATTERS IN CS</div>
+          <div class="note-body">
+            This is the seed of <b>clustering</b> and <b>vector search</b>. Embedding
+            models turn words, images and users into vectors; grouping by direction is
+            how recommendation engines decide what belongs together.
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 NUMPY -->
+      <section id="sec-numpy" class="section">
+        <div class="sec-head">
+          <span class="sec-num">10</span>
+          <h2>NUMPY PLAYGROUND</h2>
+          <span class="sec-hint">terminal</span>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-title">INPUTS</div>
+            <div class="field">
+              <span class="lbl">A</span>
+              <input type="text" id="npA" value="1, 2, 3" placeholder="1, 2, 3">
+            </div>
+            <div class="field">
+              <span class="lbl">B</span>
+              <input type="text" id="npB" value="4, 5, 6" placeholder="4, 5, 6">
+            </div>
+            <div class="field">
+              <span class="lbl">M</span>
+              <input type="text" id="npM" value="2, 1; 1, 3" placeholder="2, 1; 1, 3">
+            </div>
+            <div style="margin-top:6px;font-size:11.5px;color:var(--dim)">
+              Vectors: <span style="color:var(--accent)">1, 2, 3</span> &nbsp;·&nbsp;
+              Matrix rows: <span style="color:var(--accent)">2, 1; 1, 3</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">OPERATIONS</div>
+            <div class="btn-row">
+              <button class="btn" data-np="array">np.array()</button>
+              <button class="btn" data-np="norm">np.linalg.norm()</button>
+              <button class="btn" data-np="dot">np.dot()</button>
+              <button class="btn" data-np="cross">np.cross()</button>
+              <button class="btn" data-np="det">np.linalg.det()</button>
+              <button class="btn" data-np="eig">np.linalg.eig()</button>
+              <button class="btn" data-np="add">A + B</button>
+              <button class="btn" data-np="mul">A * B</button>
+              <button class="btn" data-np="matmul">A @ M</button>
+            </div>
+            <div style="height:12px"></div>
+            <button class="btn" id="npClear" style="width:100%">CLEAR TERMINAL</button>
+          </div>
+        </div>
+
+        <div class="term">
+          <div class="term-head">&gt; NUMPY_PLAYGROUND</div>
+          <div class="term-body" id="termLog"></div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="statusbar">
+      <span class="sb-cell"><i class="sb-dot"></i>READY</span>
+      <span class="sb-cell sb-accent" id="sbModule">DASHBOARD</span>
+      <span class="sb-spacer"></span>
+      <span class="sb-cell">WHEEL: ZOOM</span>
+      <span class="sb-cell">MIDDLE-DRAG: PAN</span>
+      <span class="sb-cell">? FOR HELP</span>
+    </footer>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- HELP OVERLAY -->
+<div id="helpOverlay">
+  <div class="help-card">
+    <div class="help-title">
+      <span>KEYBOARD &amp; CONTROLS</span>
+      <button id="helpClose" title="Close">✕</button>
+    </div>
+    <div class="help-grid">
+      <span class="key">?</span><span class="desc">Toggle this help</span>
+      <span class="key">Esc</span><span class="desc">Close overlays</span>
+      <span class="key">T</span><span class="desc">Cycle theme (amber / crt / mono)</span>
+      <span class="key">M</span><span class="desc">Toggle reduced motion</span>
+      <span class="key">G</span><span class="desc">Go to dashboard</span>
+      <span class="key">1 – 9</span><span class="desc">Jump to modules 1 – 9</span>
+      <span class="key">0</span><span class="desc">Jump to NumPy playground</span>
+      <span class="help-sep"></span>
+      <span class="key">Wheel</span><span class="desc">Zoom any canvas in/out</span>
+      <span class="key">Middle-drag</span><span class="desc">Pan the canvas</span>
+      <span class="key">Hover</span><span class="desc">See cursor math coordinates</span>
+      <span class="key">Drag title</span><span class="desc">Move any panel</span>
+      <span class="help-sep"></span>
+      <span class="key">⤓</span><span class="desc">Export canvas as PNG (toolbar)</span>
+      <span class="key">⟲</span><span class="desc">Reset canvas view (toolbar)</span>
+      <span class="key">+ / −</span><span class="desc">Zoom canvas (toolbar)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   0. UTILITIES
+   ============================================================ */
+const $  = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+const TAU = Math.PI * 2;
+
+function f2(n){
+  if (Math.abs(n) < 1e-9) n = 0;
+  return n.toFixed(2);
+}
+function fv(v){ return '[' + v.map(f2).join(', ') + ']'; }
+function fmtNum(n){
+  if (Math.abs(n) < 1e-9) n = 0;
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+function setText(id, val){
+  const el = $(id);
+  if (el && el.textContent !== String(val)) el.textContent = String(val);
+}
+
+function bindNumber(numId, rangeId){
+  const num = $(numId), rng = $(rangeId);
+  if (!num || !rng) return { get: () => 0, set: () => {} };
+  const mn = parseFloat(rng.min), mx = parseFloat(rng.max);
+  num.addEventListener('input', () => {
+    const v = parseFloat(num.value);
+    if (isFinite(v)) rng.value = clamp(v, mn, mx);
+  });
+  rng.addEventListener('input', () => { num.value = rng.value; });
+  return {
+    get: () => { const v = parseFloat(num.value); return isFinite(v) ? v : 0; },
+    set: (v) => { num.value = v; rng.value = clamp(v, mn, mx); }
+  };
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+/* ============================================================
+   1. THEME / MOTION STATE
+   ============================================================ */
+const THEMES = ['amber','crt','mono'];
+const THEME_LABELS = { amber:'AMBER', crt:'CRT', mono:'MONO' };
+let themeIdx = 0;
+let reducedMotion = false;
+
+try {
+  const saved = localStorage.getItem('lap_theme');
+  if (saved && THEMES.includes(saved)){
+    themeIdx = THEMES.indexOf(saved);
+    document.body.dataset.theme = saved;
+    $('themeLabel').textContent = THEME_LABELS[saved];
+  }
+  if (localStorage.getItem('lap_motion') === 'reduced'){
+    reducedMotion = true;
+    document.body.classList.add('reduced-motion');
+    $('btnMotion').classList.add('on');
+  }
+} catch(e){}
+
+function cycleTheme(){
+  themeIdx = (themeIdx + 1) % THEMES.length;
+  const t = THEMES[themeIdx];
+  document.body.dataset.theme = t;
+  $('themeLabel').textContent = THEME_LABELS[t];
+  try { localStorage.setItem('lap_theme', t); } catch(e){}
+  toast('THEME: ' + THEME_LABELS[t]);
+}
+
+function toggleMotion(){
+  reducedMotion = !reducedMotion;
+  document.body.classList.toggle('reduced-motion', reducedMotion);
+  $('btnMotion').classList.toggle('on', reducedMotion);
+  try { localStorage.setItem('lap_motion', reducedMotion ? 'reduced' : 'full'); } catch(e){}
+  toast(reducedMotion ? 'REDUCED MOTION ON' : 'FULL MOTION ON');
+}
+
+/* ============================================================
+   2. CANVAS ENGINE (with zoom / pan)
+   ============================================================ */
+const COL = {
+  bg:'#0b0908',
+  gridMinor:'#1e1814',
+  gridMajor:'#2e241d',
+  axis:'#5c4531',
+  accent:'#ff8a2b',
+  cream:'#f6ead8',
+  muted:'#9a8270',
+  dim:'#6b5a4c',
+  line2:'#4d3826',
+  teal:'#6fae9a',
+  red:'#e2603f',
+  green:'#8fbf7f',
+  guide:'#4a382a'
+};
+
+/* Theme-aware color resolution — reads CSS variables once per frame */
+function themeColors(){
+  const cs = getComputedStyle(document.body);
+  const g = (v, fb) => (cs.getPropertyValue(v) || fb).trim() || fb;
+  return {
+    bg:      g('--bg', '#0b0908'),
+    gridMinor:'#1e1814',
+    gridMajor:'#2e241d',
+    axis:'#5c4531',
+    accent:  g('--accent', '#ff8a2b'),
+    cream:   g('--cream', '#f6ead8'),
+    muted:   g('--muted', '#9a8270'),
+    dim:     g('--dim', '#6b5a4c'),
+    line2:   g('--line2', '#4d3826'),
+    teal:    g('--teal', '#6fae9a'),
+    red:     g('--red', '#e2603f'),
+    green:   g('--green', '#8fbf7f'),
+    guide:'#4a382a'
+  };
+}
+let _cols = themeColors();
+
+/* Canvas per-canvas state: zoom, pan */
+const canvasStates = {};
+function getCanvasState(id){
+  if (!canvasStates[id]) canvasStates[id] = { zoom:1, panX:0, panY:0 };
+  return canvasStates[id];
+}
+
+function prepCanvas(cv){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const rect = cv.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width));
+  const h = Math.max(1, Math.round(rect.height));
+  if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
+    cv.width  = Math.round(w*dpr);
+    cv.height = Math.round(h*dpr);
+  }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = _cols.bg;
+  ctx.fillRect(0,0,w,h);
+  return {ctx,w,h};
+}
+
+/* Build the view with zoom/pan applied */
+function makeViewFor(cv, w, h, baseScale){
+  const st = getCanvasState(cv.id);
+  const s = baseScale * st.zoom;
+  const ox = w/2 + st.panX;
+  const oy = h/2 + st.panY;
+  const view = {
+    w, h, scale: s, ox, oy, baseScale,
+    X(x){ return ox + x*s; },
+    Y(y){ return oy - y*s; },
+    /* convert screen px -> math coords */
+    invX(px){ return (px - ox) / s; },
+    invY(py){ return (oy - py) / s; }
+  };
+  cv._view = view;
+  return view;
+}
+
+function drawGrid(ctx,v){
+  const s = v.scale;
+  const xMin = Math.floor((0 - v.ox)/s) - 1;
+  const xMax = Math.ceil((v.w - v.ox)/s) + 1;
+  const yMin = Math.floor((v.oy - v.h)/s) - 1;
+  const yMax = Math.ceil(v.oy/s) + 1;
+  ctx.lineWidth = 1;
+  for (let i=xMin;i<=xMax;i++){
+    ctx.strokeStyle = (i % 5 === 0) ? _cols.gridMajor : _cols.gridMinor;
+    const px = Math.round(v.X(i)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,v.h); ctx.stroke();
+  }
+  for (let j=yMin;j<=yMax;j++){
+    ctx.strokeStyle = (j % 5 === 0) ? _cols.gridMajor : _cols.gridMinor;
+    const py = Math.round(v.Y(j)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(v.w,py); ctx.stroke();
+  }
+}
+
+function drawAxes(ctx,v){
+  const y0 = Math.round(v.Y(0)) + 0.5;
+  const x0 = Math.round(v.X(0)) + 0.5;
+  ctx.strokeStyle = _cols.axis;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0,y0); ctx.lineTo(v.w,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0,v.h); ctx.lineTo(x0,0); ctx.stroke();
+
+  ctx.fillStyle = _cols.axis;
+  ctx.beginPath(); ctx.moveTo(v.w, y0); ctx.lineTo(v.w-9, y0-5); ctx.lineTo(v.w-9, y0+5); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0-5, 9); ctx.lineTo(x0+5, 9); ctx.fill();
+
+  pixelText(ctx, 'x', v.w-18, y0-12, _cols.dim, 8);
+  pixelText(ctx, 'y', x0+10, 14, _cols.dim, 8);
+}
+
+function pixelText(ctx, text, x, y, color, size){
+  size = size || 9;
+  ctx.font = size + 'px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.fillText(text, x+1.5, y+1.5);
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+}
+
+function drawArrow(ctx,v,x0,y0,x1,y1,color,label,lw){
+  lw = lw || 3;
+  const sx0 = v.X(x0), sy0 = v.Y(y0);
+  const sx1 = v.X(x1), sy1 = v.Y(y1);
+  const dx = sx1-sx0, dy = sy1-sy0;
+  const len = Math.hypot(dx,dy);
+  if (len < 1.2) return;
+  const ux = dx/len, uy = dy/len;
+  const head = Math.min(15, Math.max(9, len*0.32));
+  const bx = sx1 - ux*head, by = sy1 - uy*head;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.moveTo(sx0, sy0);
+  ctx.lineTo(bx, by);
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  const px = -uy, py = ux;
+  const hw = head*0.46;
+  ctx.beginPath();
+  ctx.moveTo(sx1, sy1);
+  ctx.lineTo(bx + px*hw, by + py*hw);
+  ctx.lineTo(bx - px*hw, by - py*hw);
+  ctx.closePath();
+  ctx.fill();
+
+  if (label){
+    const lx = sx1 + ux*16 + 6;
+    const ly = sy1 + uy*16 - 6;
+    pixelText(ctx, label, lx, ly, color, 9);
+  }
+}
+
+function drawDot(ctx,v,x,y,color,r){
+  r = r || 4;
+  const px = Math.round(v.X(x)), py = Math.round(v.Y(y));
+  ctx.fillStyle = color;
+  ctx.fillRect(px-r, py-r, r*2, r*2);
+  ctx.fillStyle = _cols.bg;
+  ctx.fillRect(px-r+2, py-r+2, r*2-4, r*2-4);
+  ctx.fillStyle = color;
+  ctx.fillRect(px-1, py-1, 2, 2);
+}
+
+function drawOriginMarker(ctx,v){
+  const px = Math.round(v.X(0)), py = Math.round(v.Y(0));
+  ctx.fillStyle = _cols.muted;
+  ctx.fillRect(px-3, py-3, 6, 6);
+  ctx.fillStyle = _cols.bg;
+  ctx.fillRect(px-1, py-1, 2, 2);
+}
+
+function drawAngleArc(ctx,v,A,B,radius,color,label){
+  const a0 = Math.atan2(A[1], A[0]);
+  const a1 = Math.atan2(B[1], B[0]);
+  const ox = v.X(0), oy = v.Y(0);
+  const start = -a0;
+  let diff = (-a1) - start;
+  while (diff >  Math.PI) diff -= TAU;
+  while (diff < -Math.PI) diff += TAU;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(ox, oy, radius, start, start + diff, diff < 0);
+  ctx.stroke();
+
+  if (label){
+    const mid = start + diff/2;
+    const lx = ox + Math.cos(mid) * (radius + 26);
+    const ly = oy + Math.sin(mid) * (radius + 26);
+    pixelText(ctx, label, lx - 14, ly - 8, color, 8);
+  }
+}
+
+function drawDashedLine(ctx,v,x0,y0,x1,y1,color,dash){
+  ctx.save();
+  ctx.setLineDash(dash || [5,5]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(v.X(x0), v.Y(y0));
+  ctx.lineTo(v.X(x1), v.Y(y1));
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPolygon(ctx,v,pts,fill,stroke,dashed){
+  if (!pts.length) return;
+  ctx.save();
+  if (dashed) ctx.setLineDash([6,5]);
+  ctx.beginPath();
+  pts.forEach((p,i) => {
+    const X = v.X(p[0]), Y = v.Y(p[1]);
+    if (i === 0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+  });
+  ctx.closePath();
+  if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ============================================================
+   3. MATH HELPERS
+   ============================================================ */
+const magnitude   = (x,y) => Math.hypot(x,y);
+const dotProduct  = (A,B) => A.reduce((s,v,i) => s + v*(B[i]||0), 0);
+const crossProduct = (A,B) => [
+  A[1]*B[2] - A[2]*B[1],
+  A[2]*B[0] - A[0]*B[2],
+  A[0]*B[1] - A[1]*B[0]
+];
+const magnitude3 = v => Math.hypot(v[0],v[1],v[2]);
+const determinant2 = (a,b,c,d) => a*d - b*c;
+
+function cosineSimilarity(A,B){
+  const ma = Math.hypot(A[0],A[1]);
+  const mb = Math.hypot(B[0],B[1]);
+  if (ma < 1e-9 || mb < 1e-9) return 0;
+  return (A[0]*B[0] + A[1]*B[1]) / (ma*mb);
+}
+
+function applyMatrix(M,p){
+  return [
+    M[0][0]*p[0] + M[0][1]*p[1],
+    M[1][0]*p[0] + M[1][1]*p[1]
+  ];
+}
+
+function eigen2(a,b,c,d){
+  const tr = a + d;
+  const det = a*d - b*c;
+  const disc = tr*tr - 4*det;
+  if (disc < -1e-9){
+    return { complex:true, re: tr/2, im: Math.sqrt(-disc)/2 };
+  }
+  const s = Math.sqrt(Math.max(0, disc));
+  const l1 = (tr + s)/2;
+  const l2 = (tr - s)/2;
+  const vecFor = (l) => {
+    let vx, vy;
+    if (Math.abs(b) > 1e-9){ vx = b; vy = l - a; }
+    else if (Math.abs(c) > 1e-9){ vx = l - d; vy = c; }
+    else {
+      if (Math.abs(l - a) < 1e-9){ vx = 1; vy = 0; }
+      else { vx = 0; vy = 1; }
+    }
+    const m = Math.hypot(vx,vy) || 1;
+    return [vx/m, vy/m];
+  };
+  return { complex:false, l1, l2, v1: vecFor(l1), v2: vecFor(l2) };
+}
+
+function proj3(p, cx, cy, scale, yaw, pitch){
+  const x = p[0], y = p[1], z = p[2];
+  const cyaw = Math.cos(yaw), syaw = Math.sin(yaw);
+  const X = x*cyaw - z*syaw;
+  const Z = x*syaw + z*cyaw;
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const Y = y*cp - Z*sp;
+  return { x: cx + X*scale, y: cy - Y*scale };
+}
+
+function line3(ctx, p1, p2, color, lw){
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw || 2;
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.stroke();
+}
+
+function arrow3(ctx, from, to, color, lw){
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const len = Math.hypot(dx,dy);
+  if (len < 1) return;
+  const ux = dx/len, uy = dy/len;
+  const head = Math.min(15, Math.max(8, len*0.3));
+  const bx = to.x - ux*head, by = to.y - uy*head;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw || 3;
+  ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.fillStyle = color;
+  const px = -uy, py = ux, hw = head*0.46;
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y);
+  ctx.lineTo(bx + px*hw, by + py*hw);
+  ctx.lineTo(bx - px*hw, by - py*hw);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ============================================================
+   4. NAVIGATION
+   ============================================================ */
+let state = { section: 'dashboard' };
+let time = 0;
+
+const MODULE_NAMES = {
+  dashboard:'DASHBOARD',
+  vectors:'VECTORS',
+  operations:'VECTOR OPERATIONS',
+  dot:'DOT PRODUCT',
+  cross:'CROSS PRODUCT',
+  matrices:'MATRICES',
+  determinant:'DETERMINANT',
+  rotation:'ROTATION',
+  eigen:'EIGENVECTORS',
+  grouping:'DIRECTION GROUPING',
+  numpy:'NUMPY PLAYGROUND'
+};
+
+function go(id, skipHash){
+  if (!MODULE_NAMES[id]) id = 'dashboard';
+  state.section = id;
+  document.querySelectorAll('.section').forEach(s => {
+    s.classList.toggle('active', s.id === 'sec-' + id);
+  });
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.go === id);
+  });
+  const name = MODULE_NAMES[id];
+  setText('tbModule', name);
+  setText('sbModule', name);
+  const c = $('content');
+  if (c) c.scrollTop = 0;
+  if (!skipHash){
+    try { history.replaceState(null, '', '#' + id); } catch(e){}
+  }
+}
+
+document.querySelectorAll('[data-go]').forEach(el => {
+  el.addEventListener('click', () => go(el.dataset.go));
+});
+
+/* ============================================================
+   5. DRAGGABLE PANELS
+   ============================================================ */
+let zTop = 10;
+
+function makeDraggable(container, handleSelector){
+  const handle = container.querySelector(handleSelector);
+  if (!handle) return;
+
+  let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0, pointerId = null;
+
+  handle.addEventListener('pointerdown', e => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (e.target.closest('input,button,select,textarea,a')) return;
+    e.preventDefault();
+    dragging = true;
+    pointerId = e.pointerId;
+    sx = e.clientX; sy = e.clientY;
+    ox = container._tx || 0;
+    oy = container._ty || 0;
+    try { handle.setPointerCapture(pointerId); } catch(err){}
+    container.classList.add('dragging');
+    container.style.zIndex = ++zTop;
+  });
+
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    container._tx = ox + dx;
+    container._ty = oy + dy;
+    container.style.transform =
+      'translate(' + container._tx + 'px, ' + container._ty + 'px)';
+  });
+
+  function endDrag(){
+    if (!dragging) return;
+    dragging = false;
+    container.classList.remove('dragging');
+    if (pointerId !== null){
+      try { handle.releasePointerCapture(pointerId); } catch(err){}
+      pointerId = null;
+    }
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+}
+
+function initDraggables(){
+  document.querySelectorAll('.panel').forEach(p => makeDraggable(p, '.panel-title'));
+  document.querySelectorAll('.term').forEach(t => makeDraggable(t, '.term-head'));
+}
+
+function resetLayout(){
+  document.querySelectorAll('.panel, .term').forEach(p => {
+    p._tx = 0; p._ty = 0;
+    p.style.transform = '';
+    p.style.zIndex = '';
+  });
+  zTop = 10;
+  toast('LAYOUT RESET');
+}
+
+/* ============================================================
+   6. CANVAS TOOLBAR / ZOOM / PAN / COORDS / EXPORT
+   ============================================================ */
+function wrapCanvas(cv){
+  if (cv.parentElement && cv.parentElement.classList.contains('canvas-wrap')) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'canvas-wrap';
+  cv.parentNode.insertBefore(wrap, cv);
+  wrap.appendChild(cv);
+
+  /* toolbar */
+  const tb = document.createElement('div');
+  tb.className = 'canvas-toolbar';
+  tb.innerHTML =
+    '<button class="tool-btn" data-tool="zoomin" title="Zoom in">+</button>' +
+    '<button class="tool-btn" data-tool="zoomout" title="Zoom out">−</button>' +
+    '<button class="tool-btn" data-tool="reset" title="Reset view">⟲</button>' +
+    '<button class="tool-btn" data-tool="export" title="Export PNG">⤓</button>';
+  wrap.appendChild(tb);
+
+  /* coords */
+  const coords = document.createElement('div');
+  coords.className = 'canvas-coords';
+  coords.textContent = 'x: — y: —';
+  wrap.appendChild(coords);
+
+  tb.addEventListener('click', e => {
+    const b = e.target.closest('.tool-btn');
+    if (!b) return;
+    const st = getCanvasState(cv.id);
+    const t = b.dataset.tool;
+    if (t === 'zoomin'){ st.zoom = clamp(st.zoom * 1.25, 0.2, 6); }
+    else if (t === 'zoomout'){ st.zoom = clamp(st.zoom / 1.25, 0.2, 6); }
+    else if (t === 'reset'){ st.zoom = 1; st.panX = 0; st.panY = 0; }
+    else if (t === 'export'){ exportCanvas(cv); return; }
+  });
+
+  /* wheel zoom */
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    const st = getCanvasState(cv.id);
+    const dir = e.deltaY < 0 ? 1.15 : 1/1.15;
+    st.zoom = clamp(st.zoom * dir, 0.2, 6);
+  }, { passive:false });
+
+  /* middle-mouse pan */
+  let panning = false, psx = 0, psy = 0, pox = 0, poy = 0, pid = null;
+  cv.addEventListener('pointerdown', e => {
+    if (e.button !== 1) return;
+    e.preventDefault();
+    panning = true; pid = e.pointerId;
+    psx = e.clientX; psy = e.clientY;
+    const st = getCanvasState(cv.id);
+    pox = st.panX; poy = st.panY;
+    try { cv.setPointerCapture(pid); } catch(err){}
+    cv.style.cursor = 'grabbing';
+  });
+  cv.addEventListener('pointermove', e => {
+    if (panning){
+      const st = getCanvasState(cv.id);
+      st.panX = pox + (e.clientX - psx);
+      st.panY = poy + (e.clientY - psy);
+      return;
+    }
+    /* hover coords */
+    const v = cv._view;
+    if (!v){ coords.textContent = 'x: — y: —'; return; }
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const x = v.invX(mx);
+    const y = v.invY(my);
+    coords.textContent = 'x: ' + x.toFixed(2) + '  y: ' + y.toFixed(2);
+  });
+  cv.addEventListener('pointerup', e => {
+    if (panning){
+      panning = false;
+      cv.style.cursor = 'crosshair';
+      if (pid !== null){ try { cv.releasePointerCapture(pid); } catch(err){} pid = null; }
+    }
+  });
+  cv.addEventListener('pointerleave', () => { coords.textContent = 'x: — y: —'; });
+}
+
+function exportCanvas(cv){
+  try {
+    const url = cv.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (cv.id || 'canvas') + '-' + Date.now() + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast('CANVAS EXPORTED');
+  } catch(e){
+    toast('EXPORT FAILED');
+  }
+}
+
+/* ============================================================
+   7. COPY BUTTONS ON CODE BLOCKS
+   ============================================================ */
+function attachCopyButtons(){
+  document.querySelectorAll('.code-wrap').forEach(wrap => {
+    if (wrap.querySelector('.copy-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'COPY';
+    btn.title = 'Copy code';
+    btn.addEventListener('click', () => {
+      const code = wrap.querySelector('.code');
+      const text = code ? code.textContent : '';
+      copyText(text);
+      btn.classList.add('copied');
+      btn.textContent = 'OK';
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'COPY'; }, 1200);
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function copyText(text){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(
+      () => toast('COPIED'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); toast('COPIED'); }
+  catch(e){ toast('COPY FAILED'); }
+  document.body.removeChild(ta);
+}
+
+/* ============================================================
+   8. COLLAPSIBLE NOTES
+   ============================================================ */
+function attachNoteToggles(){
+  document.querySelectorAll('.note').forEach(note => {
+    if (note.querySelector('.note-toggle')) return;
+    const body = note.querySelector('.note-body');
+    if (!body) return;
+    const btn = document.createElement('button');
+    btn.className = 'note-toggle';
+    btn.textContent = '−';
+    btn.title = 'Collapse';
+    btn.addEventListener('click', () => {
+      const collapsed = note.classList.toggle('collapsed');
+      btn.textContent = collapsed ? '+' : '−';
+      btn.title = collapsed ? 'Expand' : 'Collapse';
+    });
+    note.appendChild(btn);
+  });
+}
+
+/* ============================================================
+   9. BIND NUMERIC INPUTS
+   ============================================================ */
+const V   = { x: bindNumber('vx','vx_r'),  y: bindNumber('vy','vy_r') };
+const OA  = { x: bindNumber('oax','oax_r'), y: bindNumber('oay','oay_r') };
+const OB  = { x: bindNumber('obx','obx_r'), y: bindNumber('oby','oby_r') };
+const OK  = bindNumber('ok','ok_r');
+const DA  = { x: bindNumber('dax','dax_r'), y: bindNumber('day','day_r') };
+const DB  = { x: bindNumber('dbx','dbx_r'), y: bindNumber('dby','dby_r') };
+const CA  = { x: bindNumber('cax','cax_r'), y: bindNumber('cay','cay_r'), z: bindNumber('caz','caz_r') };
+const CB  = { x: bindNumber('cbx','cbx_r'), y: bindNumber('cby','cby_r'), z: bindNumber('cbz','cbz_r') };
+const M   = {
+  m00: bindNumber('m00','m00_r'), m01: bindNumber('m01','m01_r'),
+  m10: bindNumber('m10','m10_r'), m11: bindNumber('m11','m11_r'),
+  vx:  bindNumber('mvx','mvx_r'), vy:  bindNumber('mvy','mvy_r')
+};
+const D   = {
+  m00: bindNumber('d00','d00_r'), m01: bindNumber('d01','d01_r'),
+  m10: bindNumber('d10','d10_r'), m11: bindNumber('d11','d11_r')
+};
+const RA  = { x: bindNumber('rax','rax_r'), y: bindNumber('ray','ray_r') };
+const E   = {
+  m00: bindNumber('e00','e00_r'), m01: bindNumber('e01','e01_r'),
+  m10: bindNumber('e10','e10_r'), m11: bindNumber('e11','e11_r')
+};
+
+/* ============================================================
+   10. DASHBOARD HERO
+   ============================================================ */
+function drawDashboard(dt){
+  const cv = $('cvHero');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+
+  const s = 36;
+  const offX = reducedMotion ? 0 : (time * 14) % s;
+  const offY = reducedMotion ? 0 : (time * 8) % s;
+  ctx.strokeStyle = 'rgba(255,138,43,0.07)';
+  ctx.lineWidth = 1;
+  for (let x = -offX; x < w; x += s){
+    ctx.beginPath();
+    ctx.moveTo(Math.round(x)+0.5, 0);
+    ctx.lineTo(Math.round(x)+0.5, h);
+    ctx.stroke();
+  }
+  for (let y = -offY; y < h; y += s){
+    ctx.beginPath();
+    ctx.moveTo(0, Math.round(y)+0.5);
+    ctx.lineTo(w, Math.round(y)+0.5);
+    ctx.stroke();
+  }
+
+  const fx = w * 0.76;
+  const fy = h * 0.5;
+  const count = 7;
+  const base = Math.min(w, h) * 0.44;
+  const t = reducedMotion ? 0 : time;
+
+  for (let i = 0; i < count; i++){
+    const phase = t * 0.32 + i * (TAU / count);
+    const len = base * (0.38 + 0.5 * Math.abs(Math.sin(t*0.45 + i)));
+    const ex = fx + Math.cos(phase) * len * 0.78;
+    const ey = fy + Math.sin(phase) * len * 0.78;
+    const alpha = 0.10 + 0.22 * (0.5 + 0.5*Math.sin(t*1.1 + i));
+
+    ctx.strokeStyle = 'rgba(255,138,43,' + alpha.toFixed(3) + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
+    const dx = ex - fx, dy = ey - fy;
+    const l = Math.hypot(dx, dy);
+    if (l > 10){
+      const ux = dx/l, uy = dy/l;
+      const head = 9;
+      const px = -uy, py = ux;
+      ctx.fillStyle = 'rgba(255,138,43,' + Math.min(0.85, alpha*2.2).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - ux*head + px*head*0.5, ey - uy*head + py*head*0.5);
+      ctx.lineTo(ex - ux*head - px*head*0.5, ey - uy*head - py*head*0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  ctx.fillStyle = 'rgba(255,138,43,0.75)';
+  ctx.fillRect(fx-3, fy-3, 6, 6);
+  ctx.fillStyle = _cols.bg;
+  ctx.fillRect(fx-1, fy-1, 2, 2);
+
+  for (let i = 0; i < 26; i++){
+    const seed = i * 137.5;
+    const px = ((seed + t * (12 + i*0.7)) % (w + 40)) - 20;
+    const py = ((seed * 0.7 + Math.sin(t*0.5 + i) * 30 + h*0.5) % h);
+    const a = 0.06 + 0.10 * Math.abs(Math.sin(t*0.9 + i));
+    ctx.fillStyle = 'rgba(246,234,216,' + a.toFixed(3) + ')';
+    ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
+  }
+}
+
+/* ============================================================
+   11. VECTORS
+   ============================================================ */
+function drawVectors(){
+  const cv = $('cvVectors');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/12);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+  drawOriginMarker(ctx,v);
+
+  const x = V.x.get(), y = V.y.get();
+  const mag = magnitude(x,y);
+
+  drawDashedLine(ctx,v, 0,0, x,0, _cols.guide, [4,4]);
+  drawDashedLine(ctx,v, 0,0, 0,y, _cols.guide, [4,4]);
+  drawDashedLine(ctx,v, x,y, x,0, _cols.guide, [4,4]);
+  drawDashedLine(ctx,v, x,y, 0,y, _cols.guide, [4,4]);
+
+  if (mag > 0.05){
+    drawArrow(ctx,v, 0,0, x/mag, y/mag, '#6b4f38', '', 2);
+  }
+
+  drawArrow(ctx,v, 0,0, x,y, _cols.accent, 'A');
+  drawDot(ctx,v, x, y, _cols.accent, 5);
+
+  setText('vMag', f2(mag));
+  setText('vUnit', mag > 1e-6 ? fv([x/mag, y/mag]) : '[0.00, 0.00]');
+  setText('vAng', f2(Math.atan2(y,x)*180/Math.PI) + '°');
+  setText('vComp', '[' + fmtNum(x) + ', ' + fmtNum(y) + ']');
+
+  setText('vecCode',
+    'A = np.array([' + fmtNum(x) + ', ' + fmtNum(y) + '])\n' +
+    'np.linalg.norm(A)      # ' + f2(mag) + '\n' +
+    'A / np.linalg.norm(A)  # ' + (mag > 1e-6 ? fv([x/mag, y/mag]) : '[0. 0.]')
+  );
+}
+
+$('vRand').addEventListener('click', () => {
+  V.x.set(Math.round((Math.random()*16-8)*2)/2);
+  V.y.set(Math.round((Math.random()*16-8)*2)/2);
+  toast('VECTOR RANDOMIZED');
+});
+
+/* ============================================================
+   12. VECTOR OPERATIONS
+   ============================================================ */
+let opMode = 'add';
+
+document.querySelectorAll('[data-op]').forEach(b => {
+  b.addEventListener('click', () => {
+    opMode = b.dataset.op;
+    document.querySelectorAll('[data-op]').forEach(x => x.classList.toggle('primary', x === b));
+    toast(b.textContent.trim() + ' SELECTED');
+  });
+});
+
+function drawOps(){
+  const cv = $('cvOps');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/13);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+  drawOriginMarker(ctx,v);
+
+  const A = [OA.x.get(), OA.y.get()];
+  const B = [OB.x.get(), OB.y.get()];
+  const k = OK.get();
+
+  let R, label, formula;
+  if (opMode === 'add'){
+    R = [A[0]+B[0], A[1]+B[1]];
+    label = 'A + B';
+    formula = '[' + fmtNum(A[0]) + '+' + fmtNum(B[0]) + ', ' + fmtNum(A[1]) + '+' + fmtNum(B[1]) + ']';
+    drawDashedLine(ctx,v, A[0],A[1], R[0],R[1], _cols.guide, [4,4]);
+    drawDashedLine(ctx,v, B[0],B[1], R[0],R[1], _cols.guide, [4,4]);
+  } else if (opMode === 'sub'){
+    R = [A[0]-B[0], A[1]-B[1]];
+    label = 'A − B';
+    formula = '[' + fmtNum(A[0]) + '−' + fmtNum(B[0]) + ', ' + fmtNum(A[1]) + '−' + fmtNum(B[1]) + ']';
+    drawDashedLine(ctx,v, B[0],B[1], A[0],A[1], _cols.guide, [4,4]);
+  } else {
+    R = [A[0]*k, A[1]*k];
+    label = 'k × A';
+    formula = fmtNum(k) + ' × [' + fmtNum(A[0]) + ', ' + fmtNum(A[1]) + ']';
+    drawDashedLine(ctx,v, 0,0, A[0],A[1], _cols.guide, [4,4]);
+  }
+
+  drawArrow(ctx,v, 0,0, A[0],A[1], _cols.cream, 'A', 3);
+  drawArrow(ctx,v, 0,0, B[0],B[1], _cols.teal,  'B', 3);
+  drawArrow(ctx,v, 0,0, R[0],R[1], _cols.accent, 'R', 4);
+  drawDot(ctx,v, R[0], R[1], _cols.accent, 5);
+
+  setText('opLabel', label);
+  setText('opRes', fv(R));
+  setText('opMag', f2(magnitude(R[0],R[1])));
+  setText('opFormula', formula);
+
+  setText('opsCode',
+    'A = np.array([' + fmtNum(A[0]) + ', ' + fmtNum(A[1]) + '])\n' +
+    'B = np.array([' + fmtNum(B[0]) + ', ' + fmtNum(B[1]) + '])\n' +
+    'A + B   # ' + fv([A[0]+B[0], A[1]+B[1]]) + '\n' +
+    'A - B   # ' + fv([A[0]-B[0], A[1]-B[1]]) + '\n' +
+    '' + fmtNum(k) + ' * A   # ' + fv([A[0]*k, A[1]*k])
+  );
+}
+
+/* ============================================================
+   13. DOT PRODUCT
+   ============================================================ */
+function drawDot(){
+  const cv = $('cvDot');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/13);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+  drawOriginMarker(ctx,v);
+
+  const A = [DA.x.get(), DA.y.get()];
+  const B = [DB.x.get(), DB.y.get()];
+  const ma = magnitude(A[0],A[1]);
+  const mb = magnitude(B[0],B[1]);
+  const dot = A[0]*B[0] + A[1]*B[1];
+  const cos = (ma > 1e-9 && mb > 1e-9) ? dot/(ma*mb) : 0;
+  const ang = Math.acos(clamp(cos,-1,1)) * 180/Math.PI;
+
+  if (ma > 1e-9){
+    const t = dot / (ma*ma);
+    const P = [A[0]*t, A[1]*t];
+    drawDashedLine(ctx,v, B[0],B[1], P[0],P[1], _cols.guide, [4,4]);
+    ctx.save();
+    ctx.strokeStyle = _cols.teal;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(v.X(0), v.Y(0));
+    ctx.lineTo(v.X(P[0]), v.Y(P[1]));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawArrow(ctx,v, 0,0, A[0],A[1], _cols.accent, 'A', 3);
+  drawArrow(ctx,v, 0,0, B[0],B[1], _cols.teal, 'B', 3);
+
+  if (ma > 1e-6 && mb > 1e-6 && Math.abs(cos) < 0.9999){
+    drawAngleArc(ctx,v, A, B, Math.min(70, Math.max(34, Math.min(ma,mb)*v.scale*0.35)),
+                 _cols.cream, f2(ang) + '°');
+  }
+
+  let status, cls;
+  if (cos > 0.5){ status = '◉ SIMILAR'; cls = 'good'; }
+  else if (cos < -0.5){ status = '◉ OPPOSITE'; cls = 'bad'; }
+  else if (Math.abs(cos) < 0.15){ status = '◈ ORTHOGONAL'; cls = 'neutral'; }
+  else { status = '◇ NEUTRAL'; cls = 'neutral'; }
+
+  setText('dotVal', f2(dot));
+  setText('dotAngle', f2(ang) + '°');
+  setText('dotCos', f2(cos));
+  setText('dotProj', f2(ma > 1e-9 ? dot/ma : 0));
+  setText('dotOrtho', Math.abs(cos) < 0.01 ? 'YES — 90°' : 'NO');
+
+  const st = $('dotStatus');
+  if (st){
+    st.textContent = status;
+    st.className = cls;
+  }
+
+  setText('dotCode',
+    'A = np.array([' + fmtNum(A[0]) + ', ' + fmtNum(A[1]) + '])\n' +
+    'B = np.array([' + fmtNum(B[0]) + ', ' + fmtNum(B[1]) + '])\n' +
+    'np.dot(A, B)   # ' + f2(dot) + '\n' +
+    'np.dot(A,B)/(np.linalg.norm(A)*np.linalg.norm(B))\n' +
+    '# ' + f2(cos)
+  );
+}
+
+/* ============================================================
+   14. CROSS PRODUCT
+   ============================================================ */
+function drawCross(){
+  const cv = $('cvCross');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const st = getCanvasState(cv.id);
+
+  const A = [CA.x.get(), CA.y.get(), CA.z.get()];
+  const B = [CB.x.get(), CB.y.get(), CB.z.get()];
+  const C = crossProduct(A,B);
+
+  const mA = magnitude3(A), mB = magnitude3(B), mC = magnitude3(C);
+  const maxM = Math.max(mA, mB, mC, 3);
+  const scale = (Math.min(w,h) * 0.30 / maxM) * st.zoom;
+  const cx = w * 0.46 + st.panX, cy = h * 0.56 + st.panY;
+  const yaw = -0.7, pitch = 0.42;
+
+  const P = (p) => proj3(p, cx, cy, scale, yaw, pitch);
+  cv._view = {
+    invX: (px) => px, invY: (py) => py
+  };
+
+  const G = 5;
+  for (let i = -G; i <= G; i++){
+    line3(ctx, P([i,-G,0]), P([i,G,0]), '#1c1612', 1);
+    line3(ctx, P([-G,i,0]), P([G,i,0]), '#1c1612', 1);
+  }
+
+  const AX = 5.6;
+  line3(ctx, P([0,0,0]), P([AX,0,0]), '#4a382a', 2);
+  line3(ctx, P([0,0,0]), P([0,AX,0]), '#4a382a', 2);
+  line3(ctx, P([0,0,0]), P([0,0,AX]), '#4a382a', 2);
+  pixelText(ctx, 'x', P([AX,0,0]).x + 8, P([AX,0,0]).y, _cols.dim, 8);
+  pixelText(ctx, 'y', P([0,AX,0]).x + 8, P([0,AX,0]).y, _cols.dim, 8);
+  pixelText(ctx, 'z', P([0,0,AX]).x + 8, P([0,0,AX]).y, _cols.dim, 8);
+
+  const o = P([0,0,0]);
+  const pa = P(A), pb = P(B);
+  const pab = P([A[0]+B[0], A[1]+B[1], A[2]+B[2]]);
+  ctx.fillStyle = 'rgba(255,138,43,0.10)';
+  ctx.beginPath();
+  ctx.moveTo(o.x,o.y);
+  ctx.lineTo(pa.x,pa.y);
+  ctx.lineTo(pab.x,pab.y);
+  ctx.lineTo(pb.x,pb.y);
+  ctx.closePath();
+  ctx.fill();
+
+  arrow3(ctx, o, pa, _cols.cream, 3);
+  arrow3(ctx, o, pb, _cols.teal, 3);
+  arrow3(ctx, o, P(C), _cols.accent, 4);
+
+  pixelText(ctx, 'A', pa.x + 8, pa.y - 8, _cols.cream, 9);
+  pixelText(ctx, 'B', pb.x + 8, pb.y - 8, _cols.teal, 9);
+  const pc = P(C);
+  pixelText(ctx, 'A×B', pc.x + 8, pc.y - 8, _cols.accent, 9);
+
+  ctx.fillStyle = _cols.muted;
+  ctx.fillRect(Math.round(o.x)-3, Math.round(o.y)-3, 6, 6);
+
+  setText('crossVec', fv(C));
+  setText('crossMag', f2(mC));
+  setText('crossArea', f2(mC));
+  setText('crossAB', f2(mA*mB));
+  setText('crossSin', mA*mB > 1e-9 ? f2(mC/(mA*mB)) : '0.00');
+
+  setText('crossCode',
+    'A = np.array([' + A.map(fmtNum).join(', ') + '])\n' +
+    'B = np.array([' + B.map(fmtNum).join(', ') + '])\n' +
+    'np.cross(A, B)   # ' + fv(C) + '\n' +
+    'np.linalg.norm(np.cross(A,B))  # ' + f2(mC)
+  );
+}
+
+/* ============================================================
+   15. MATRICES
+   ============================================================ */
+const PRESETS = {
+  identity: [[1,0],[0,1]],
+  stretch:  [[2,0],[0,1]],
+  shrink:   [[0.5,0],[0,0.5]],
+  rotate:   (() => { const c = Math.cos(Math.PI/4), s = Math.sin(Math.PI/4); return [[c,-s],[s,c]]; })(),
+  reflect:  [[1,0],[0,-1]],
+  shear:    [[1,1],[0,1]]
+};
+
+document.querySelectorAll('[data-preset]').forEach(b => {
+  b.addEventListener('click', () => {
+    const m = PRESETS[b.dataset.preset];
+    if (!m) return;
+    M.m00.set(m[0][0]); M.m01.set(m[0][1]);
+    M.m10.set(m[1][0]); M.m11.set(m[1][1]);
+    toast(b.textContent.trim() + ' APPLIED');
+  });
+});
+
+let matPulse = 0;
+$('btnApply').addEventListener('click', () => {
+  matPulse = 1;
+  toast('MATRIX APPLIED');
+});
+
+function drawTransformedGrid(ctx, v, Mx, range, color){
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (let i = -range; i <= range; i++){
+    const p1 = applyMatrix(Mx, [i, -range]);
+    const p2 = applyMatrix(Mx, [i,  range]);
+    ctx.beginPath();
+    ctx.moveTo(v.X(p1[0]), v.Y(p1[1]));
+    ctx.lineTo(v.X(p2[0]), v.Y(p2[1]));
+    ctx.stroke();
+
+    const q1 = applyMatrix(Mx, [-range, i]);
+    const q2 = applyMatrix(Mx, [ range, i]);
+    ctx.beginPath();
+    ctx.moveTo(v.X(q1[0]), v.Y(q1[1]));
+    ctx.lineTo(v.X(q2[0]), v.Y(q2[1]));
+    ctx.stroke();
+  }
+}
+
+function drawMatrices(dt){
+  const cv = $('cvMat');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+
+  if (matPulse > 0) matPulse = Math.max(0, matPulse - dt*2.2);
+
+  const Mx = [
+    [M.m00.get(), M.m01.get()],
+    [M.m10.get(), M.m11.get()]
+  ];
+  const Vv = [M.vx.get(), M.vy.get()];
+  const Vt = applyMatrix(Mx, Vv);
+
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/15);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+
+  drawTransformedGrid(ctx, v, Mx, 6, 'rgba(255,138,43,0.20)');
+
+  drawPolygon(ctx, v, [[0,0],[1,0],[1,1],[0,1]], 'rgba(246,234,216,0.05)', 'rgba(246,234,216,0.35)', true);
+  const sq = [[0,0],[1,0],[1,1],[0,1]].map(p => applyMatrix(Mx,p));
+  drawPolygon(ctx, v, sq, 'rgba(255,138,43,0.16)', _cols.accent, false);
+
+  drawDashedLine(ctx, v, 0,0, Vv[0], Vv[1], _cols.guide, [4,4]);
+  drawArrow(ctx, v, 0,0, Vv[0], Vv[1], _cols.cream, 'v', 3);
+  drawArrow(ctx, v, 0,0, Vt[0], Vt[1], _cols.accent, 'Mv', 4);
+  drawDot(ctx, v, Vt[0], Vt[1], _cols.accent, 5);
+
+  if (matPulse > 0){
+    ctx.strokeStyle = 'rgba(255,138,43,' + (matPulse*0.5).toFixed(3) + ')';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3,3,w-6,h-6);
+  }
+
+  const det = determinant2(Mx[0][0], Mx[0][1], Mx[1][0], Mx[1][1]);
+  setText('matBefore', fv(Vv));
+  setText('matAfter', fv(Vt));
+  setText('matDet', f2(det));
+
+  setText('matCode',
+    'M = np.array([[' + fmtNum(Mx[0][0]) + ', ' + fmtNum(Mx[0][1]) + '],\n' +
+    '              [' + fmtNum(Mx[1][0]) + ', ' + fmtNum(Mx[1][1]) + ']])\n' +
+    'v = np.array([' + fmtNum(Vv[0]) + ', ' + fmtNum(Vv[1]) + '])\n' +
+    'M @ v   # ' + fv(Vt)
+  );
+}
+
+/* ============================================================
+   16. DETERMINANT
+   ============================================================ */
+document.querySelectorAll('[data-det]').forEach(b => {
+  b.addEventListener('click', () => {
+    if (b.dataset.det === 'collapse'){
+      D.m00.set(1); D.m01.set(2); D.m10.set(2); D.m11.set(4);
+      toast('⚠ SPACE COLLAPSED');
+    } else {
+      D.m00.set(1); D.m01.set(0); D.m10.set(0); D.m11.set(-1);
+      toast('ORIENTATION FLIPPED');
+    }
+  });
+});
+
+function drawDet(){
+  const cv = $('cvDet');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/14);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+
+  const a = D.m00.get(), b = D.m01.get(), c = D.m10.get(), d = D.m11.get();
+  const Mx = [[a,b],[c,d]];
+  const det = determinant2(a,b,c,d);
+
+  drawTransformedGrid(ctx, v, Mx, 6, 'rgba(255,138,43,0.16)');
+
+  drawPolygon(ctx, v, [[0,0],[1,0],[1,1],[0,1]], 'rgba(246,234,216,0.06)', 'rgba(246,234,216,0.45)', true);
+  const sq = [[0,0],[1,0],[1,1],[0,1]].map(p => applyMatrix(Mx,p));
+  const collapsed = Math.abs(det) < 1e-6;
+  drawPolygon(ctx, v, sq,
+    collapsed ? 'rgba(226,96,63,0.28)' : 'rgba(255,138,43,0.22)',
+    collapsed ? _cols.red : _cols.accent, false);
+
+  pixelText(ctx, 'ORIGINAL 1×1', v.X(-5.6), v.Y(5.2), _cols.dim, 8);
+  pixelText(ctx, 'TRANSFORMED', v.X(-5.6), v.Y(4.4), collapsed ? _cols.red : _cols.accent, 8);
+
+  if (collapsed){
+    ctx.strokeStyle = _cols.red;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(3,3,w-6,h-6);
+  }
+
+  setText('detMatrix',
+    '| ' + fmtNum(a) + '  ' + fmtNum(b) + ' |\n' +
+    '| ' + fmtNum(c) + '  ' + fmtNum(d) + ' |'
+  );
+  setText('detVal', f2(det));
+  setText('detScale', '×' + f2(Math.abs(det)));
+
+  const st = $('detStatus');
+  if (st){
+    if (collapsed){
+      st.textContent = '⚠ SPACE COLLAPSED';
+      st.className = 'small bad';
+    } else {
+      st.textContent = 'NON-SINGULAR';
+      st.className = 'small good';
+    }
+  }
+
+  const or = $('detOrient');
+  if (or){
+    or.textContent = det < -1e-9 ? 'FLIPPED (MIRROR)' : 'PRESERVED';
+    or.className = det < -1e-9 ? 'small bad' : 'small neutral';
+  }
+
+  setText('detCode',
+    'A = np.array([[' + fmtNum(a) + ', ' + fmtNum(b) + '],\n' +
+    '              [' + fmtNum(c) + ', ' + fmtNum(d) + ']])\n' +
+    'np.linalg.det(A)   # ' + f2(det)
+  );
+}
+
+/* ============================================================
+   17. ROTATION
+   ============================================================ */
+let rotPlaying = false;
+const rotSlider = $('rotR');
+
+$('rotPlay').addEventListener('click', () => {
+  rotPlaying = !rotPlaying;
+  $('rotPlay').textContent = rotPlaying ? '❚❚ PAUSE' : '▶ PLAY';
+  $('rotPlay').classList.toggle('on', rotPlaying);
+  toast(rotPlaying ? 'ROTATION RUNNING' : 'ROTATION PAUSED');
+});
+$('rotZero').addEventListener('click', () => {
+  rotSlider.value = 0;
+  rotPlaying = false;
+  $('rotPlay').textContent = '▶ PLAY';
+  $('rotPlay').classList.remove('on');
+  toast('ANGLE RESET');
+});
+
+function drawRotation(dt){
+  const cv = $('cvRot');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/13);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+  drawOriginMarker(ctx,v);
+
+  let angle = parseFloat(rotSlider.value) || 0;
+  if (rotPlaying && !reducedMotion){
+    angle = (angle + dt * 55) % 360;
+    rotSlider.value = angle;
+  }
+  const rad = angle * Math.PI/180;
+  const A = [RA.x.get(), RA.y.get()];
+  const R = [
+    A[0]*Math.cos(rad) - A[1]*Math.sin(rad),
+    A[0]*Math.sin(rad) + A[1]*Math.cos(rad)
+  ];
+
+  const trailR = Math.min(magnitude(A[0],A[1]) * v.scale, Math.min(w,h)*0.45);
+  ctx.save();
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle = 'rgba(255,138,43,0.28)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(v.X(0), v.Y(0), trailR, 0, -rad, rad > 0);
+  ctx.stroke();
+  ctx.restore();
+
+  drawArrow(ctx,v, 0,0, A[0],A[1], 'rgba(246,234,216,0.55)', 'ORIGINAL', 3);
+  drawArrow(ctx,v, 0,0, R[0],R[1], _cols.accent, 'ROTATED', 4);
+  drawDot(ctx,v, R[0], R[1], _cols.accent, 5);
+
+  setText('rotAngleLabel', Math.round(angle) + '°');
+  setText('rotOrig', fv(A));
+  setText('rotOrigMag', f2(magnitude(A[0],A[1])));
+  setText('rotNew', fv(R));
+  setText('rotNewMag', f2(magnitude(R[0],R[1])));
+
+  setText('rotCode',
+    'theta = np.radians(' + Math.round(angle) + ')\n' +
+    'R = np.array([[ np.cos(theta), -np.sin(theta)],\n' +
+    '              [ np.sin(theta),  np.cos(theta)]])\n' +
+    'A = np.array([' + fmtNum(A[0]) + ', ' + fmtNum(A[1]) + '])\n' +
+    'R @ A   # ' + fv(R)
+  );
+}
+
+/* ============================================================
+   18. EIGENVECTORS
+   ============================================================ */
+document.querySelectorAll('[data-eig]').forEach(b => {
+  b.addEventListener('click', () => {
+    const sets = {
+      diag: [[2,0],[0,3]],
+      sym:  [[2,1],[1,2]],
+      shear:[[1,1],[0,1]],
+      rot:  [[0,-1],[1,0]]
+    };
+    const m = sets[b.dataset.eig];
+    if (!m) return;
+    E.m00.set(m[0][0]); E.m01.set(m[0][1]);
+    E.m10.set(m[1][0]); E.m11.set(m[1][1]);
+    toast(b.textContent.trim() + ' MATRIX');
+  });
+});
+
+function drawEigen(){
+  const cv = $('cvEig');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/14);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+
+  const a = E.m00.get(), b = E.m01.get(), c = E.m10.get(), d = E.m11.get();
+  const Mx = [[a,b],[c,d]];
+  const eg = eigen2(a,b,c,d);
+
+  drawTransformedGrid(ctx, v, Mx, 6, 'rgba(255,138,43,0.15)');
+
+  const sq = [[0,0],[1,0],[1,1],[0,1]].map(p => applyMatrix(Mx,p));
+  drawPolygon(ctx, v, sq, 'rgba(255,138,43,0.12)', 'rgba(255,138,43,0.55)', false);
+
+  if (!eg.complex){
+    const lines = [
+      { v: eg.v1, l: eg.l1, col: _cols.accent },
+      { v: eg.v2, l: eg.l2, col: _cols.teal }
+    ];
+    ctx.save();
+    ctx.setLineDash([9,7]);
+    ctx.lineDashOffset = reducedMotion ? 0 : -(time * 22) % 16;
+    lines.forEach((ln) => {
+      const [x,y] = ln.v;
+      if (Math.abs(x) < 1e-9 && Math.abs(y) < 1e-9) return;
+      const L = 12;
+      ctx.strokeStyle = ln.col;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(v.X(-x*L), v.Y(-y*L));
+      ctx.lineTo(v.X( x*L), v.Y( y*L));
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    lines.forEach((ln, idx) => {
+      const [x,y] = ln.v;
+      if (Math.abs(x) < 1e-9 && Math.abs(y) < 1e-9) return;
+      const scale = Math.min(5, Math.abs(ln.l) * 1.6 + 1.6);
+      drawArrow(ctx, v, 0,0, x*scale, y*scale, ln.col,
+                'v' + (idx+1) + '  λ=' + f2(ln.l), 3);
+    });
+
+    setText('eigL1', f2(eg.l1));
+    setText('eigL2', f2(eg.l2));
+    setText('eigV1', fv(eg.v1));
+    setText('eigV2', fv(eg.v2));
+  } else {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(226,96,63,0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,6]);
+    const rad = Math.min(w,h)*0.32;
+    ctx.beginPath();
+    ctx.arc(v.X(0), v.Y(0), rad, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+    pixelText(ctx, 'COMPLEX EIGENVALUES', 16, 20, _cols.red, 9);
+    pixelText(ctx, 'NO REAL EIGENVECTORS', 16, 38, _cols.muted, 8);
+
+    setText('eigL1', f2(eg.re) + '+' + f2(eg.im) + 'i');
+    setText('eigL2', f2(eg.re) + '−' + f2(eg.im) + 'i');
+    setText('eigV1', '—');
+    setText('eigV2', '—');
+  }
+
+  pixelText(ctx, 'A = [[' + fmtNum(a) + ', ' + fmtNum(b) + '], [' + fmtNum(c) + ', ' + fmtNum(d) + ']]',
+            16, h - 18, _cols.dim, 8);
+}
+
+/* ============================================================
+   19. DIRECTION GROUPING
+   ============================================================ */
+const GROUP_COLORS = ['#ff8a2b','#6fae9a','#d9a441','#c96a6a','#8fb0d9','#b98fd9'];
+let vectors = [
+  {x:2, y:3}, {x:4, y:6}, {x:-2, y:-3},
+  {x:1, y:4}, {x:5, y:1}, {x:-4, y:-1}
+];
+
+function computeGroups(list){
+  const groups = [];
+  const THRESH = 0.85;
+  for (const p of list){
+    const m = Math.hypot(p.x, p.y);
+    if (m < 1e-9) continue;
+    let placed = false;
+    for (const g of groups){
+      const gm = Math.hypot(g.rep.x, g.rep.y);
+      if (gm < 1e-9) continue;
+      const cos = (p.x*g.rep.x + p.y*g.rep.y) / (m*gm);
+      if (Math.abs(cos) >= THRESH){
+        const sign = cos < 0 ? -1 : 1;
+        g.members.push({ x:p.x, y:p.y, opp: cos < 0 });
+        g.rep.x += sign * p.x/m;
+        g.rep.y += sign * p.y/m;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed){
+      groups.push({
+        rep: { x:p.x/m, y:p.y/m },
+        members: [{ x:p.x, y:p.y, opp:false }]
+      });
+    }
+  }
+  return groups;
+}
+
+function renderGroups(){
+  const list = $('grpList');
+  const box  = $('grpGroups');
+  if (!list || !box) return;
+
+  list.innerHTML = '';
+  vectors.forEach(p => {
+    const s = document.createElement('span');
+    s.className = 'chip';
+    s.textContent = '[' + fmtNum(p.x) + ', ' + fmtNum(p.y) + ']';
+    list.appendChild(s);
+  });
+
+  const groups = computeGroups(vectors);
+  box.innerHTML = '';
+
+  if (!groups.length){
+    box.innerHTML = '<div style="color:var(--dim);font-size:12px">NO VECTORS YET</div>';
+    return;
+  }
+
+  groups.forEach((g, i) => {
+    const color = GROUP_COLORS[i % GROUP_COLORS.length];
+    const anyOpp = g.members.some(m => m.opp);
+    const box2 = document.createElement('div');
+    box2.className = 'group-box';
+
+    const head = document.createElement('div');
+    head.className = 'group-head';
+    head.style.color = color;
+    head.textContent = 'GROUP ' + String.fromCharCode(65 + i);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (anyOpp ? 'opp' : 'sim');
+    badge.textContent = anyOpp ? '↙ OPPOSITE DIRECTION' : '↗ SIMILAR DIRECTION';
+    head.appendChild(badge);
+    box2.appendChild(head);
+
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    g.members.forEach(m => {
+      const c = document.createElement('span');
+      c.className = 'chip';
+      const dot = document.createElement('i');
+      dot.className = 'dot';
+      dot.style.background = color;
+      c.appendChild(dot);
+      c.appendChild(document.createTextNode(
+        '[' + fmtNum(m.x) + ', ' + fmtNum(m.y) + ']' + (m.opp ? ' ↙' : '')
+      ));
+      chips.appendChild(c);
+    });
+    box2.appendChild(chips);
+    box.appendChild(box2);
+  });
+}
+
+function drawGrouping(){
+  const cv = $('cvGrp');
+  if (!cv) return;
+  const {ctx,w,h} = prepCanvas(cv);
+  const v = makeViewFor(cv, w, h, Math.min(w,h)/14);
+  drawGrid(ctx,v);
+  drawAxes(ctx,v);
+  drawOriginMarker(ctx,v);
+
+  const groups = computeGroups(vectors);
+  const colorOf = new Map();
+  groups.forEach((g,i) => {
+    const color = GROUP_COLORS[i % GROUP_COLORS.length];
+    g.members.forEach(m => {
+      colorOf.set(m.x + '|' + m.y, color);
+    });
+  });
+
+  vectors.forEach((p) => {
+    const color = colorOf.get(p.x + '|' + p.y) || _cols.muted;
+    drawArrow(ctx, v, 0, 0, p.x, p.y, color, null, 3);
+    drawDot(ctx, v, p.x, p.y, color, 4);
+  });
+
+  groups.forEach((g,i) => {
+    const color = GROUP_COLORS[i % GROUP_COLORS.length];
+    pixelText(ctx, 'GROUP ' + String.fromCharCode(65+i), 14, 20 + i*18, color, 8);
+  });
+}
+
+$('grpAdd').addEventListener('click', () => {
+  const raw = $('grpInput').value || '';
+  const parts = raw.split(/[,\s]+/).map(t => parseFloat(t)).filter(n => isFinite(n));
+  if (parts.length < 2){
+    toast('ENTER TWO NUMBERS');
+    return;
+  }
+  vectors.push({ x: parts[0], y: parts[1] });
+  renderGroups();
+  toast('VECTOR ADDED');
+});
+
+$('grpRandom').addEventListener('click', () => {
+  const x = Math.round((Math.random()*12 - 6) * 2) / 2;
+  const y = Math.round((Math.random()*12 - 6) * 2) / 2;
+  if (x === 0 && y === 0){ return; }
+  vectors.push({ x, y });
+  renderGroups();
+  toast('RANDOM VECTOR ADDED');
+});
+
+$('grpClear').addEventListener('click', () => {
+  vectors = [];
+  renderGroups();
+  toast('ALL VECTORS CLEARED');
+});
+
+/* ============================================================
+   20. NUMPY PLAYGROUND
+   ============================================================ */
+function parseVec(str){
+  return String(str).split(',').map(t => parseFloat(t.trim())).filter(n => isFinite(n));
+}
+function parseMat(str){
+  return String(str).split(';').map(row =>
+    row.split(',').map(t => parseFloat(t.trim())).filter(n => isFinite(n))
+  ).filter(r => r.length > 0);
+}
+
+function termLine(code, result, isErr){
+  const log = $('termLog');
+  if (!log) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'term-line';
+
+  const c = document.createElement('div');
+  c.className = 'term-code';
+  c.textContent = '>>> ' + code;
+
+  const r = document.createElement('div');
+  r.className = 'term-res' + (isErr ? ' term-err' : '');
+  r.textContent = result;
+
+  wrap.appendChild(c);
+  wrap.appendChild(r);
+  log.appendChild(wrap);
+  log.scrollTop = log.scrollHeight;
+}
+
+function runNumpy(op){
+  const A = parseVec($('npA').value);
+  const B = parseVec($('npB').value);
+  const Mr = parseMat($('npM').value);
+
+  if (op === 'array'){
+    termLine('np.array([' + A.join(', ') + '])',
+      'array(' + fv(A) + ')\n' +
+      'shape = (' + A.length + ',)   dtype = float64');
+    return;
+  }
+
+  if (op === 'norm'){
+    if (!A.length){ termLine('np.linalg.norm(A)','INVALID INPUT', true); return; }
+    const n = Math.hypot(...A);
+    termLine('np.linalg.norm(A)', f2(n));
+    return;
+  }
+
+  if (op === 'dot'){
+    if (A.length !== B.length || !A.length){
+      termLine('np.dot(A, B)', 'ERROR: shapes not aligned', true); return;
+    }
+    termLine('np.dot(A, B)', f2(dotProduct(A,B)));
+    return;
+  }
+
+  if (op === 'cross'){
+    if (A.length !== 3 || B.length !== 3){
+      termLine('np.cross(A, B)', 'ERROR: cross product requires 3D vectors', true); return;
+    }
+    termLine('np.cross(A, B)', fv(crossProduct(A,B)));
+    return;
+  }
+
+  if (op === 'det'){
+    if (Mr.length !== 2 || Mr[0].length !== 2){
+      termLine('np.linalg.det(M)', 'ERROR: M must be 2x2  →  e.g.  2, 1; 1, 3', true); return;
+    }
+    termLine('np.linalg.det(M)', f2(determinant2(Mr[0][0], Mr[0][1], Mr[1][0], Mr[1][1])));
+    return;
+  }
+
+  if (op === 'eig'){
+    if (Mr.length !== 2 || Mr[0].length !== 2){
+      termLine('np.linalg.eig(M)', 'ERROR: M must be 2x2  →  e.g.  2, 0; 0, 3', true); return;
+    }
+    const eg = eigen2(Mr[0][0], Mr[0][1], Mr[1][0], Mr[1][1]);
+    if (eg.complex){
+      termLine('np.linalg.eig(M)',
+        'eigenvalues: [' + f2(eg.re) + '+' + f2(eg.im) + 'j, ' +
+        f2(eg.re) + '-' + f2(eg.im) + 'j]\neigenvectors: complex');
+    } else {
+      termLine('np.linalg.eig(M)',
+        'eigenvalues:  ' + fv([eg.l1, eg.l2]) + '\n' +
+        'eigenvectors:\n' +
+        '  ' + fv(eg.v1) + '\n' +
+        '  ' + fv(eg.v2));
+    }
+    return;
+  }
+
+  if (op === 'add'){
+    if (A.length !== B.length || !A.length){
+      termLine('A + B', 'ERROR: shape mismatch', true); return;
+    }
+    termLine('A + B', fv(A.map((v,i) => v + B[i])));
+    return;
+  }
+
+  if (op === 'mul'){
+    if (A.length !== B.length || !A.length){
+      termLine('A * B', 'ERROR: shape mismatch', true); return;
+    }
+    termLine('A * B  (element-wise)', fv(A.map((v,i) => v * B[i])));
+    return;
+  }
+
+  if (op === 'matmul'){
+    if (Mr.length !== 2 || Mr[0].length !== 2 || A.length !== 2){
+      termLine('A @ M', 'ERROR: need 2D vector A and 2x2 matrix M', true); return;
+    }
+    const out = applyMatrix(Mr, A);
+    termLine('A @ M', fv(out));
+    return;
+  }
+}
+
+document.querySelectorAll('[data-np]').forEach(b => {
+  b.addEventListener('click', () => runNumpy(b.dataset.np));
+});
+
+$('npClear').addEventListener('click', () => {
+  $('termLog').innerHTML = '';
+  termLine('import numpy as np', 'numpy playground ready — click an operation', false);
+  toast('TERMINAL CLEARED');
+});
+
+/* ============================================================
+   21. RESET BUTTONS
+   ============================================================ */
+$('btnReset').addEventListener('click', () => {
+  const sec = document.querySelector('.section.active');
+  if (sec){
+    sec.querySelectorAll('input').forEach(inp => {
+      inp.value = inp.defaultValue;
+    });
+  }
+  if (state.section === 'grouping'){
+    vectors = [
+      {x:2, y:3}, {x:4, y:6}, {x:-2, y:-3},
+      {x:1, y:4}, {x:5, y:1}, {x:-4, y:-1}
+    ];
+    renderGroups();
+  }
+  if (state.section === 'numpy'){
+    $('termLog').innerHTML = '';
+    termLine('import numpy as np', 'numpy playground ready — click an operation', false);
+  }
+  if (state.section === 'rotation'){
+    rotPlaying = false;
+    $('rotPlay').textContent = '▶ PLAY';
+    $('rotPlay').classList.remove('on');
+  }
+  toast('MODULE RESET');
+});
+
+$('btnResetLayout').addEventListener('click', resetLayout);
+
+/* ============================================================
+   22. HELP OVERLAY
+   ============================================================ */
+function toggleHelp(force){
+  const ov = $('helpOverlay');
+  const show = (typeof force === 'boolean') ? force : !ov.classList.contains('show');
+  ov.classList.toggle('show', show);
+}
+$('btnHelp').addEventListener('click', () => toggleHelp());
+$('helpClose').addEventListener('click', () => toggleHelp(false));
+$('helpOverlay').addEventListener('click', e => {
+  if (e.target === $('helpOverlay')) toggleHelp(false);
+});
+
+/* ============================================================
+   23. THEME / MOTION BUTTONS
+   ============================================================ */
+$('btnTheme').addEventListener('click', cycleTheme);
+$('btnMotion').addEventListener('click', toggleMotion);
+
+/* ============================================================
+   24. KEYBOARD SHORTCUTS
+   ============================================================ */
+const KEY_TO_SECTION = {
+  '1':'vectors','2':'operations','3':'dot','4':'cross','5':'matrices',
+  '6':'determinant','7':'rotation','8':'eigen','9':'grouping','0':'numpy'
+};
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  const inField = tag === 'input' || tag === 'textarea' || tag === 'select';
+  const key = e.key;
+
+  if (key === 'Escape'){
+    toggleHelp(false);
+    return;
+  }
+  if (inField) return;
+
+  if (key === '?' || (key === '/' && e.shiftKey)){
+    e.preventDefault();
+    toggleHelp();
+    return;
+  }
+  if (key === 't' || key === 'T'){ cycleTheme(); return; }
+  if (key === 'm' || key === 'M'){ toggleMotion(); return; }
+  if (key === 'g' || key === 'G'){ go('dashboard'); return; }
+  if (KEY_TO_SECTION[key]){ go(KEY_TO_SECTION[key]); return; }
+});
+
+/* ============================================================
+   25. ANIMATION LOOP
+   ============================================================ */
+const DRAW = {
+  dashboard: drawDashboard,
+  vectors: drawVectors,
+  operations: drawOps,
+  dot: drawDot,
+  cross: drawCross,
+  matrices: drawMatrices,
+  determinant: drawDet,
+  rotation: drawRotation,
+  eigen: drawEigen,
+  grouping: drawGrouping
+};
+
+let lastT = 0;
+function loop(t){
+  if (!lastT) lastT = t;
+  let dt = (t - lastT) / 1000;
+  lastT = t;
+  if (dt > 0.1) dt = 0.1;
+  if (!reducedMotion) time += dt;
+
+  /* refresh theme colors each frame (cheap; allows live theme switching on canvases) */
+  _cols = themeColors();
+
+  const fn = DRAW[state.section];
+  if (fn) fn(dt);
+
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   26. BOOT
+   ============================================================ */
+(function boot(){
+  /* wrap every canvas with toolbar + coords */
+  document.querySelectorAll('canvas.canvas').forEach(wrapCanvas);
+
+  initDraggables();
+  attachCopyButtons();
+  attachNoteToggles();
+  renderGroups();
+  termLine('import numpy as np', 'numpy playground ready — click an operation', false);
+
+  /* read hash for initial section */
+  const hash = (location.hash || '').replace('#','');
+  go(MODULE_NAMES[hash] ? hash : 'dashboard', true);
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

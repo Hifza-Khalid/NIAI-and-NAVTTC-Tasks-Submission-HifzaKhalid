@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguin Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 1100px;
+            max-width: 100%;
+            background: #111;
+            border-radius: 30px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            box-shadow: 0 0 80px rgba(255, 140, 0, 0.1);
+            border: 1px solid #222;
+        }
+
+        /* LEFT SIDE - Predictor */
+        .left-panel {
+            flex: 1 1 400px;
+            padding: 50px 40px;
+            background: #0d0d0d;
+        }
+
+        .left-panel h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #ff8c00;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .left-panel .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .slider-group {
+            margin-bottom: 30px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .slider-label span:last-child {
+            color: #ff8c00;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #222;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ff8c00;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #0a0a0a;
+            box-shadow: 0 0 0 2px #ff8c00;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #ff8c00;
+            border: 3px solid #0a0a0a;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .predict-btn {
+            width: 100%;
+            background: #ff8c00;
+            border: none;
+            color: #0a0a0a;
+            font-weight: 800;
+            font-size: 1.2rem;
+            padding: 18px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+            margin-top: 20px;
+        }
+
+        .predict-btn:hover {
+            background: #ffa033;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 140, 0, 0.3);
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 2px solid #333;
+            color: #888;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            border-radius: 50px;
+            width: 100%;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .reset-btn:hover {
+            border-color: #ff8c00;
+            color: #ff8c00;
+        }
+
+        /* RIGHT SIDE - Image & Result */
+        .right-panel {
+            flex: 1.3 1 500px;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            position: relative;
+            border-left: 1px solid #222;
+        }
+
+        .image-container {
+            width: 85%;
+            max-width: 450px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #1a1a1a;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: brightness(0.95);
+        }
+
+        .result-box {
+            width: 85%;
+            max-width: 450px;
+            background: #111;
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid #ff8c00;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.4s;
+            text-align: center;
+        }
+
+        .result-box.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .result-species {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff8c00;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .result-desc {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .result-desc strong {
+            color: #ff8c00;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .right-panel {
+                border-left: none;
+                border-top: 1px solid #222;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- LEFT: Predictor controls -->
+    <div class="left-panel">
+        <h1>Penguin<br>Predictor</h1>
+        <p class="subtitle">Adjust the sliders to match your measurements.<br>We'll identify the species instantly.</p>
+
+        <!-- Bill Length -->
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Bill Length (mm)</span>
+                <span id="billLenVal">40.0</span>
+            </div>
+            <input type="range" id="billLen" min="30" max="60" value="40" step="0.1" oninput="updateSlider('billLen', 'billLenVal')">
+        </div>
+
+        <!-- Bill Depth -->
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Bill Depth (mm)</span>
+                <span id="billDepthVal">16.0</span>
+            </div>
+            <input type="range" id="billDepth" min="10" max="25" value="16" step="0.1" oninput="updateSlider('billDepth', 'billDepthVal')">
+        </div>
+
+        <!-- Flipper Length -->
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Flipper Length (mm)</span>
+                <span id="flipperVal">200</span>
+            </div>
+            <input type="range" id="flipper" min="150" max="240" value="200" step="1" oninput="updateSlider('flipper', 'flipperVal')">
+        </div>
+
+        <!-- Body Mass -->
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>Body Mass (g)</span>
+                <span id="massVal">4000</span>
+            </div>
+            <input type="range" id="mass" min="2000" max="7000" value="4000" step="50" oninput="updateSlider('mass', 'massVal')">
+        </div>
+
+        <button class="predict-btn" onclick="predict()">⚡ Identify Species</button>
+        <button class="reset-btn" onclick="reset()">Reset</button>
+    </div>
+
+    <!-- RIGHT: Image + Result -->
+    <div class="right-panel">
+        <div class="image-container">
+            <img src="https://allisonhorst.github.io/palmerpenguins/reference/figures/lter_penguins.png" alt="Palmer Penguins">
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div class="result-label">Prediction</div>
+            <div class="result-species" id="resultSpecies">—</div>
+            <div class="result-desc" id="resultDesc">Adjust sliders and click Identify</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Species mean values (from EDA)
+    const means = {
+        'Adélie': { bl: 38.79, bd: 18.32, fl: 189.95, mass: 3700.66 },
+        'Chinstrap': { bl: 48.83, bd: 18.42, fl: 195.82, mass: 3733.09 },
+        'Gentoo': { bl: 47.50, bd: 14.98, fl: 217.19, mass: 5076.02 }
+    };
+
+    function updateSlider(sliderId, labelId) {
+        const val = document.getElementById(sliderId).value;
+        document.getElementById(labelId).textContent = parseFloat(val).toFixed(1);
+    }
+
+    function euclidean(input, mean) {
+        return Math.sqrt(
+            Math.pow(input.bl - mean.bl, 2) +
+            Math.pow(input.bd - mean.bd, 2) +
+            Math.pow(input.fl - mean.fl, 2) +
+            Math.pow(input.mass - mean.mass, 2)
+        );
+    }
+
+    function predict() {
+        const bl = parseFloat(document.getElementById('billLen').value);
+        const bd = parseFloat(document.getElementById('billDepth').value);
+        const fl = parseFloat(document.getElementById('flipper').value);
+        const mass = parseFloat(document.getElementById('mass').value);
+
+        const input = { bl, bd, fl, mass };
+
+        let distances = {};
+        for (let species in means) {
+            distances[species] = euclidean(input, means[species]);
+        }
+
+        let nearest = Object.keys(distances).reduce((a, b) => distances[a] < distances[b] ? a : b);
+        let dist = distances[nearest];
+
+        let desc = '';
+        if (nearest === 'Gentoo') {
+            desc = 'Long flippers, heavy body, shallow bill.';
+        } else if (nearest === 'Chinstrap') {
+            desc = 'Long bill, medium body, deep bill.';
+        } else {
+            desc = 'Shorter bill and flippers, lighter mass.';
+        }
+
+        document.getElementById('resultSpecies').textContent = nearest;
+        document.getElementById('resultDesc').innerHTML = `Distance: <strong>${dist.toFixed(1)}</strong><br>${desc}`;
+        document.getElementById('resultBox').classList.add('visible');
+    }
+
+    function reset() {
+        document.getElementById('billLen').value = 40;
+        document.getElementById('billDepth').value = 16;
+        document.getElementById('flipper').value = 200;
+        document.getElementById('mass').value = 4000;
+
+        updateSlider('billLen', 'billLenVal');
+        updateSlider('billDepth', 'billDepthVal');
+        updateSlider('flipper', 'flipperVal');
+        updateSlider('mass', 'massVal');
+
+        document.getElementById('resultBox').classList.remove('visible');
+        document.getElementById('resultSpecies').textContent = '—';
+        document.getElementById('resultDesc').textContent = 'Adjust sliders and click Identify';
+    }
+</script>
+
+</body>
+</html>

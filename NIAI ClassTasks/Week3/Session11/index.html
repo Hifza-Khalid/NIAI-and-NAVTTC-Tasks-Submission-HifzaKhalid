@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Statistical Dashboard · E-commerce Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  :root {
+    --bg:         #0b1120;
+    --panel:      #111a2e;
+    --panel-2:    #16213a;
+    --panel-3:    #1c2946;
+    --border:     #1f2b45;
+    --border-2:   #2a3a5c;
+    --text:       #e2e8f0;
+    --muted:      #8b9ab5;
+    --muted-2:    #64748b;
+    --primary:    #6366f1;
+    --primary-2:  #818cf8;
+    --green:      #10b981;
+    --amber:      #f59e0b;
+    --red:        #ef4444;
+    --cyan:       #06b6d4;
+    --pink:       #ec4899;
+    --violet:     #a855f7;
+    --radius:     14px;
+    --radius-sm:  9px;
+    --shadow:     0 4px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: radial-gradient(1200px 700px at 10% -10%, #14213d 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ─────────────── HEADER ─────────────── */
+  header {
+    padding: 22px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: rgba(11,17,32,.7);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header h1 .logo {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--primary), var(--violet));
+    display: grid; place-items: center;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(99,102,241,.35);
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-2);
+    border-radius: 999px;
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .badge .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ─────────────── LAYOUT ─────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 22px;
+    padding: 22px 28px 40px;
+    max-width: 1720px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* ─────────────── SIDEBAR ─────────────── */
+  aside {
+    position: sticky;
+    top: 86px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .card {
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .card h3 .ico { font-size: 13px; }
+
+  label.field {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  select, input[type="range"] {
+    width: 100%;
+    background: var(--panel-3);
+    color: var(--text);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm);
+    padding: 9px 11px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    cursor: pointer;
+    appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b9ab5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    padding-right: 32px;
+  }
+  select:hover, select:focus { border-color: var(--primary); }
+  select:focus { box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+  input[type="range"] {
+    padding: 0;
+    height: 6px;
+    background: var(--panel-3);
+    border: none;
+    border-radius: 999px;
+    margin-top: 6px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+    transition: transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group:last-child { margin-bottom: 0; }
+
+  .range-value {
+    display: inline-block;
+    float: right;
+    color: var(--primary-2);
+    font-weight: 600;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 12.5px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .k { color: var(--muted); }
+  .info-row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ─────────────── MAIN ─────────────── */
+  main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+  /* KPI STRIP */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  .kpi {
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s, border-color .18s;
+  }
+  .kpi:hover { transform: translateY(-2px); border-color: var(--border-2); }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--violet));
+  }
+  .kpi .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .kpi .value {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .kpi .hint {
+    font-size: 11px;
+    color: var(--muted-2);
+    margin-top: 4px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1;
+    min-width: max-content;
+    padding: 9px 16px;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    display: flex; align-items: center; gap: 7px;
+    justify-content: center;
+  }
+  .tab:hover { color: var(--text); background: var(--panel-3); }
+  .tab.active {
+    background: linear-gradient(135deg, var(--primary), var(--violet));
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(99,102,241,.35);
+  }
+
+  /* PANEL */
+  .panel { display: none; animation: fadeUp .25s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .chart-card {
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    min-width: 0;
+  }
+  .chart-card h4 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .02em;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .chart {
+    width: 100%;
+    height: 380px;
+  }
+  .chart.tall { height: 460px; }
+
+  /* STAT TABLES */
+  .stat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .stat-table th {
+    text-align: left;
+    padding: 9px 12px;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,.015);
+  }
+  .stat-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .stat-table tr:last-child td { border-bottom: none; }
+  .stat-table tr:hover td { background: rgba(99,102,241,.05); }
+  .stat-table td.mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--primary-2);
+  }
+  .stat-table td.desc { color: var(--muted); font-size: 12px; }
+
+  .highlight-box {
+    background: rgba(99,102,241,.08);
+    border: 1px solid rgba(99,102,241,.25);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    font-size: 12.5px;
+    color: #c7d2fe;
+    margin-top: 10px;
+    line-height: 1.55;
+  }
+  .highlight-box.green {
+    background: rgba(16,185,129,.08);
+    border-color: rgba(16,185,129,.25);
+    color: #a7f3d0;
+  }
+  .highlight-box.amber {
+    background: rgba(245,158,11,.08);
+    border-color: rgba(245,158,11,.25);
+    color: #fde68a;
+  }
+  .highlight-box.red {
+    background: rgba(239,68,68,.08);
+    border-color: rgba(239,68,68,.25);
+    color: #fecaca;
+  }
+
+  .metric-mini {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .metric-mini .m {
+    background: var(--panel-3);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .metric-mini .m .k {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .metric-mini .m .v {
+    font-size: 17px;
+    font-weight: 700;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .data-preview {
+    max-height: 260px;
+    overflow: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .data-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-preview th {
+    position: sticky; top: 0;
+    background: var(--panel-3);
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-preview td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+
+  details summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 8px 0;
+    user-select: none;
+    font-weight: 500;
+  }
+  details summary:hover { color: var(--text); }
+  details[open] summary { color: var(--primary-2); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .kpi-strip { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; padding: 16px; }
+    aside { position: static; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    header { padding: 16px; }
+  }
+  @media (max-width: 520px) {
+    .kpi-strip { grid-template-columns: 1fr; }
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>
+      <span class="logo">📊</span>
+      Statistical Dashboard
+    </h1>
+    <div class="subtitle">Descriptive statistics · distribution shape · correlation · E-commerce Orders</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <span class="badge"><span class="dot"></span> Live · computed in-browser</span>
+    <span class="badge">📦 250 rows · 6 cols</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside>
+    <div class="card">
+      <h3><span class="ico">⚙️</span> Controls</h3>
+
+      <div class="field-group">
+        <label class="field">Primary numeric column</label>
+        <select id="colSelect"></select>
+      </div>
+
+      <div class="field-group">
+        <label class="field">Second column (correlation)</label>
+        <select id="col2Select"></select>
+      </div>
+
+      <div class="field-group">
+        <label class="field">
+          Histogram bins
+          <span class="range-value" id="binsVal">25</span>
+        </label>
+        <input type="range" id="binsRange" min="5" max="60" value="25" />
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="ico">📋</span> Dataset info</h3>
+      <div class="info-row"><span class="k">Rows</span><span class="v">250</span></div>
+      <div class="info-row"><span class="k">Numeric cols</span><span class="v">5</span></div>
+      <div class="info-row"><span class="k">Categorical</span><span class="v">1</span></div>
+      <div class="info-row"><span class="k">Missing values</span><span class="v" style="color:var(--green)">0</span></div>
+      <div class="info-row"><span class="k">Memory</span><span class="v">~12 KB</span></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="ico">👁️</span> Data preview</h3>
+      <details>
+        <summary>Show first 8 rows</summary>
+        <div class="data-preview" id="dataPreview"></div>
+      </details>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi">
+        <div class="label">Mean</div>
+        <div class="value" id="kpiMean">—</div>
+        <div class="hint">arithmetic average</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Median</div>
+        <div class="value" id="kpiMedian">—</div>
+        <div class="hint">50th percentile</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Std Dev</div>
+        <div class="value" id="kpiStd">—</div>
+        <div class="hint">sample (n − 1)</div>
+      </div>
+      <div class="kpi">
+        <div class="label">IQR</div>
+        <div class="value" id="kpiIQR">—</div>
+        <div class="hint">Q3 − Q1</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Skewness</div>
+        <div class="value" id="kpiSkew">—</div>
+        <div class="hint" id="kpiSkewHint">—</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="central"><span>📌</span> Central Tendency</button>
+      <button class="tab" data-tab="dispersion"><span>📏</span> Dispersion</button>
+      <button class="tab" data-tab="skewness"><span>📐</span> Skewness</button>
+      <button class="tab" data-tab="iqr"><span>📦</span> IQR &amp; Outliers</button>
+      <button class="tab" data-tab="zscore"><span>🔔</span> Z-Score</button>
+      <button class="tab" data-tab="correlation"><span>🔗</span> Correlation</button>
+    </nav>
+
+    <!-- ─── TAB 1 : CENTRAL TENDENCY ─── -->
+    <section class="panel active" id="panel-central">
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Distribution with central-tendency markers</h4>
+          <div class="chart tall" id="chartCentral"></div>
+        </div>
+        <div class="chart-card">
+          <h4>Summary table</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Mean</div><div class="v" id="cMean">—</div></div>
+            <div class="m"><div class="k">Median</div><div class="v" id="cMedian">—</div></div>
+            <div class="m"><div class="k">Mode</div><div class="v" id="cMode">—</div></div>
+            <div class="m"><div class="k">Count</div><div class="v" id="cCount">—</div></div>
+          </div>
+          <table class="stat-table">
+            <thead>
+              <tr><th>Measure</th><th>Value</th><th>Formula / meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Mean</td><td class="mono" id="tMean">—</td><td class="desc">Σx ⁄ n — arithmetic average</td></tr>
+              <tr><td>Median</td><td class="mono" id="tMedian">—</td><td class="desc">50th percentile (middle value)</td></tr>
+              <tr><td>Mode</td><td class="mono" id="tMode">—</td><td class="desc">most frequent value</td></tr>
+              <tr><td>Sum</td><td class="mono" id="tSum">—</td><td class="desc">Σx — total of all values</td></tr>
+              <tr><td>Min / Max</td><td class="mono" id="tMinMax">—</td><td class="desc">smallest / largest value</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" id="centralNote">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TAB 2 : DISPERSION ─── -->
+    <section class="panel" id="panel-dispersion">
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Spread — σ-bands around the mean</h4>
+          <div class="chart tall" id="chartDispersion"></div>
+        </div>
+        <div class="chart-card">
+          <h4>Dispersion measures</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Range</div><div class="v" id="dRange">—</div></div>
+            <div class="m"><div class="k">Variance</div><div class="v" id="dVariance">—</div></div>
+            <div class="m"><div class="k">Std Dev</div><div class="v" id="dStd">—</div></div>
+            <div class="m"><div class="k">CV</div><div class="v" id="dCV">—</div></div>
+          </div>
+          <table class="stat-table">
+            <thead>
+              <tr><th>Measure</th><th>Value</th><th>Formula</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Range</td><td class="mono" id="tRange">—</td><td class="desc">max − min</td></tr>
+              <tr><td>Variance (sample)</td><td class="mono" id="tVariance">—</td><td class="desc">Σ(x − x̄)² ⁄ (n − 1)</td></tr>
+              <tr><td>Variance (population)</td><td class="mono" id="tVarPop">—</td><td class="desc">Σ(x − x̄)² ⁄ n</td></tr>
+              <tr><td>Std Dev (sample)</td><td class="mono" id="tStd">—</td><td class="desc">√variance</td></tr>
+              <tr><td>Std Error</td><td class="mono" id="tSE">—</td><td class="desc">s ⁄ √n</td></tr>
+              <tr><td>CV</td><td class="mono" id="tCV">—</td><td class="desc">σ ⁄ μ × 100 %</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" id="dispersionNote">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TAB 3 : SKEWNESS ─── -->
+    <section class="panel" id="panel-skewness">
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Histogram — compare Mean vs Median</h4>
+          <div class="chart tall" id="chartSkewHist"></div>
+        </div>
+        <div class="chart-card">
+          <h4>Box plot — tail direction</h4>
+          <div class="chart tall" id="chartSkewBox"></div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Skewness &amp; Kurtosis</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Skewness</div><div class="v" id="sSkew">—</div></div>
+            <div class="m"><div class="k">Kurtosis (excess)</div><div class="v" id="sKurt">—</div></div>
+            <div class="m"><div class="k">Interpretation</div><div class="v" id="sLabel" style="font-size:14px">—</div></div>
+          </div>
+          <table class="stat-table">
+            <thead><tr><th>|Skewness|</th><th>Rule of thumb</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">&lt; 0.5</td><td class="desc">fairly symmetric</td></tr>
+              <tr><td class="mono">0.5 – 1.0</td><td class="desc">moderately skewed</td></tr>
+              <tr><td class="mono">&gt; 1.0</td><td class="desc">highly skewed</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" id="skewNote">—</div>
+        </div>
+        <div class="chart-card">
+          <h4>Mean − Median gap</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Mean</div><div class="v" id="smMean">—</div></div>
+            <div class="m"><div class="k">Median</div><div class="v" id="smMedian">—</div></div>
+            <div class="m"><div class="k">Difference</div><div class="v" id="smDiff">—</div></div>
+          </div>
+          <div class="highlight-box amber">
+            <strong>How to read it:</strong> the adjusted Fisher–Pearson skewness is
+            <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;">g₁ = n / ((n−1)(n−2)) · Σ((xᵢ − x̄)/s)³</code>.
+            A positive value means a long right tail (mean pulled above median);
+            negative means a long left tail.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TAB 4 : IQR & OUTLIERS ─── -->
+    <section class="panel" id="panel-iqr">
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Box plot with Tukey fences (1.5 × IQR)</h4>
+          <div class="chart tall" id="chartIQR"></div>
+        </div>
+        <div class="chart-card">
+          <h4>Quartile breakdown</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Q1 (25%)</div><div class="v" id="iQ1">—</div></div>
+            <div class="m"><div class="k">Q3 (75%)</div><div class="v" id="iQ3">—</div></div>
+            <div class="m"><div class="k">IQR</div><div class="v" id="iIQR">—</div></div>
+            <div class="m"><div class="k">Outliers</div><div class="v" id="iOutCount">—</div></div>
+          </div>
+          <table class="stat-table">
+            <thead><tr><th>Measure</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Q1 (25th percentile)</td><td class="mono" id="tQ1">—</td></tr>
+              <tr><td>Q2 (median)</td><td class="mono" id="tQ2">—</td></tr>
+              <tr><td>Q3 (75th percentile)</td><td class="mono" id="tQ3">—</td></tr>
+              <tr><td>IQR = Q3 − Q1</td><td class="mono" id="tIQR">—</td></tr>
+              <tr><td>Lower fence (Q1 − 1.5·IQR)</td><td class="mono" id="tLoFence">—</td></tr>
+              <tr><td>Upper fence (Q3 + 1.5·IQR)</td><td class="mono" id="tHiFence">—</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" id="iqrNote">—</div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="chart-card">
+        <h4>Detected outlier rows</h4>
+        <div id="outlierTable" class="data-preview"></div>
+      </div>
+    </section>
+
+    <!-- ─── TAB 5 : Z-SCORE ─── -->
+    <section class="panel" id="panel-zscore">
+      <div class="chart-card">
+        <h4>Z-scores by row index</h4>
+        <div class="chart tall" id="chartZ"></div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Z-score distribution</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Mean of z</div><div class="v" id="zMean">—</div></div>
+            <div class="m"><div class="k">SD of z</div><div class="v" id="zStd">—</div></div>
+            <div class="m"><div class="k">|z| &gt; 2</div><div class="v" id="z2">—</div></div>
+            <div class="m"><div class="k">|z| &gt; 3</div><div class="v" id="z3">—</div></div>
+          </div>
+          <table class="stat-table">
+            <thead><tr><th>|z|</th><th>Interpretation</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">&lt; 1</td><td class="desc">typical</td></tr>
+              <tr><td class="mono">1 – 2</td><td class="desc">somewhat unusual</td></tr>
+              <tr><td class="mono">2 – 3</td><td class="desc">unusual</td></tr>
+              <tr><td class="mono">&gt; 3</td><td class="desc">extreme outlier</td></tr>
+            </tbody>
+          </table>
+          <div class="highlight-box">
+            <strong>Z-score:</strong>
+            <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;">z = (x − x̄) / s</code>
+            — how many standard deviations a point sits from the mean.
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>Top 10 most extreme values by |z|</h4>
+          <div id="zTable"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TAB 6 : CORRELATION ─── -->
+    <section class="panel" id="panel-correlation">
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Correlation matrix (Pearson) — all numeric columns</h4>
+          <div class="chart tall" id="chartCorrMatrix"></div>
+        </div>
+        <div class="chart-card">
+          <h4 id="scatterTitle">Scatter plot</h4>
+          <div class="chart tall" id="chartScatter"></div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <h4>Correlation coefficients</h4>
+          <div class="metric-mini">
+            <div class="m"><div class="k">Pearson r</div><div class="v" id="corrPearson">—</div></div>
+            <div class="m"><div class="k">Spearman ρ</div><div class="v" id="corrSpearman">—</div></div>
+            <div class="m"><div class="k">R²</div><div class="v" id="corrR2">—</div></div>
+          </div>
+          <div class="highlight-box" id="corrNote">—</div>
+        </div>
+        <div class="chart-card">
+          <h4>Pairwise Pearson r values</h4>
+          <div id="corrTable"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   1. SYNTHETIC DATASET — "E-commerce Orders"
+   Seeded PRNG so numbers are the same on every reload.
+   ══════════════════════════════════════════════════════════════════ */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function gaussian(rand) {
+  let u = 0, v = 0;
+  while (u === 0) u = rand();
+  while (v === 0) v = rand();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function buildDataset(n = 250) {
+  const rand = mulberry32(20240919);
+  const cats = ['Electronics', 'Clothing', 'Home', 'Books', 'Sports', 'Beauty'];
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    // order_value: log-normal → right-skewed
+    const lv = Math.exp(3.6 + gaussian(rand) * 0.75);
+    const order_value = Math.round(lv * 100) / 100;
+
+    // quantity: discrete, mostly 1-3, occasional larger
+    const quantity = Math.max(1, Math.round(1 + Math.exp(gaussian(rand) * 0.55) - 0.6));
+
+    // customer_age: roughly normal, clipped
+    const customer_age = Math.round(Math.max(18, Math.min(75, 38 + gaussian(rand) * 12)));
+
+    // delivery_days: right-skewed exponential-ish
+    const delivery_days = Math.max(1, Math.round(2 + Math.exp(gaussian(rand) * 0.5)));
+
+    // rating: left-skewed (piled near 4–5)
+    const rating = Math.max(1, Math.min(5, Math.round((4.3 + gaussian(rand) * 0.65) * 10) / 10));
+
+    const category = cats[Math.floor(rand() * cats.length)];
+
+    rows.push({ order_value, quantity, customer_age, delivery_days, rating, category });
+  }
+  return rows;
+}
+
+const DATA = buildDataset(250);
+const NUMERIC_COLS = ['order_value', 'quantity', 'customer_age', 'delivery_days', 'rating'];
+const ALL_COLS = [...NUMERIC_COLS, 'category'];
+
+/* ══════════════════════════════════════════════════════════════════
+   2. STATISTICS ENGINE
+   ══════════════════════════════════════════════════════════════════ */
+const S = {
+  mean: a => a.reduce((x, y) => x + y, 0) / a.length,
+
+  median: a => {
+    const s = [...a].sort((x, y) => x - y);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  },
+
+  mode: a => {
+    const freq = new Map();
+    let maxF = 0;
+    for (const v of a) {
+      const c = (freq.get(v) || 0) + 1;
+      freq.set(v, c);
+      if (c > maxF) maxF = c;
+    }
+    const modes = [...freq.entries()].filter(([, c]) => c === maxF).map(([v]) => v).sort((x, y) => x - y);
+    return { value: modes[0], count: modes.length, frequency: maxF };
+  },
+
+  variance: (a, ddof = 1) => {
+    const m = S.mean(a);
+    return a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - ddof);
+  },
+
+  std: (a, ddof = 1) => Math.sqrt(S.variance(a, ddof)),
+
+  skewness: a => {
+    const n = a.length;
+    if (n < 3) return 0;
+    const m = S.mean(a);
+    const s = S.std(a, 1);
+    if (s === 0) return 0;
+    const sum = a.reduce((acc, x) => acc + ((x - m) / s) ** 3, 0);
+    return (n / ((n - 1) * (n - 2))) * sum;
+  },
+
+  kurtosis: a => {
+    const n = a.length;
+    if (n < 4) return 0;
+    const m = S.mean(a);
+    const s = S.std(a, 1);
+    if (s === 0) return 0;
+    const sum = a.reduce((acc, x) => acc + ((x - m) / s) ** 4, 0);
+    return (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * sum
+         - (3 * (n - 1) ** 2) / ((n - 2) * (n - 3));
+  },
+
+  quantile: (a, q) => {
+    const s = [...a].sort((x, y) => x - y);
+    const pos = (s.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    return s[base + 1] !== undefined ? s[base] + rest * (s[base + 1] - s[base]) : s[base];
+  },
+
+  pearson: (x, y) => {
+    const n = x.length;
+    const mx = S.mean(x), my = S.mean(y);
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) {
+      const a = x[i] - mx, b = y[i] - my;
+      num += a * b; dx += a * a; dy += b * b;
+    }
+    const den = Math.sqrt(dx * dy);
+    return den === 0 ? 0 : num / den;
+  },
+
+  spearman: (x, y) => S.pearson(rank(x), rank(y)),
+};
+
+function rank(arr) {
+  const idx = arr.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
+  const r = new Array(arr.length);
+  let i = 0;
+  while (i < idx.length) {
+    let j = i;
+    while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++;
+    const avg = (i + j) / 2 + 1;
+    for (let k = i; k <= j; k++) r[idx[k][1]] = avg;
+    i = j + 1;
+  }
+  return r;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   3. HELPERS
+   ══════════════════════════════════════════════════════════════════ */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+const fmt = (x, d = 3) =>
+  Number.isFinite(x)
+    ? x.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
+    : '—';
+
+const fmtInt = x => Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '—';
+
+function prettyName(col) {
+  return col.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function skewLabel(x) {
+  const a = Math.abs(x);
+  if (a < 0.5) return 'fairly symmetric';
+  if (a < 1.0) return 'moderately skewed';
+  return 'highly skewed';
+}
+
+function strengthLabel(r) {
+  const a = Math.abs(r);
+  if (a < 0.2) return 'very weak';
+  if (a < 0.4) return 'weak';
+  if (a < 0.6) return 'moderate';
+  if (a < 0.8) return 'strong';
+  return 'very strong';
+}
+
+/* Plotly shared layout (transparent dark) */
+const PLOT_LAYOUT = {
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  font: { color: '#e2e8f0', family: 'Inter, system-ui, sans-serif', size: 12 },
+  margin: { l: 55, r: 20, t: 30, b: 45 },
+  xaxis: { gridcolor: '#1f2b45', zerolinecolor: '#1f2b45', linecolor: '#1f2b45' },
+  yaxis: { gridcolor: '#1f2b45', zerolinecolor: '#1f2b45', linecolor: '#1f2b45' },
+  showlegend: false,
+  hoverlabel: { bgcolor: '#16213a', bordercolor: '#2a3a5c', font: { color: '#e2e8f0' } },
+};
+const PLOT_CONFIG = { displayModeBar: false, responsive: true };
+
+function vline(x, color, dash, label) {
+  const shapes = [{
+    type: 'line', xref: 'x', yref: 'paper',
+    x0: x, x1: x, y0: 0, y1: 1,
+    line: { color, dash, width: 2 },
+  }];
+  const annotations = label ? [{
+    x, y: 1, yref: 'paper', xref: 'x',
+    text: label, showarrow: false,
+    yanchor: 'bottom', yshift: 6,
+    font: { color, size: 11, family: 'Inter' },
+    bgcolor: 'rgba(11,17,32,.85)',
+    bordercolor: color, borderwidth: 1, borderpad: 3,
+  }] : [];
+  return { shapes, annotations };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   4. STATE + DOM
+   ══════════════════════════════════════════════════════════════════ */
+const state = {
+  col: 'order_value',
+  col2: 'quantity',
+  bins: 25,
+};
+
+const el = {
+  colSelect: $('#colSelect'),
+  col2Select: $('#col2Select'),
+  binsRange: $('#binsRange'),
+  binsVal: $('#binsVal'),
+};
+
+/* Populate selects */
+NUMERIC_COLS.forEach(c => {
+  el.colSelect.insertAdjacentHTML('beforeend', `<option value="${c}">${prettyName(c)}</option>`);
+});
+el.colSelect.value = state.col;
+
+function refreshCol2Options() {
+  el.col2Select.innerHTML = '';
+  NUMERIC_COLS.forEach(c => {
+    el.col2Select.insertAdjacentHTML(
+      'beforeend',
+      `<option value="${c}">${prettyName(c)}</option>`
+    );
+  });
+  if (NUMERIC_COLS.includes(state.col2) && state.col2 !== state.col) {
+    el.col2Select.value = state.col2;
+  } else {
+    state.col2 = NUMERIC_COLS.find(c => c !== state.col);
+    el.col2Select.value = state.col2;
+  }
+}
+
+/* Data preview */
+(function renderPreview() {
+  const cols = ALL_COLS;
+  let html = '<table><thead><tr>' + cols.map(c => `<th>${prettyName(c)}</th>`).join('') + '</tr></thead><tbody>';
+  DATA.slice(0, 8).forEach(r => {
+    html += '<tr>' + cols.map(c => `<td>${r[c]}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  $('#dataPreview').innerHTML = html;
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   5. RENDER FUNCTIONS
+   ══════════════════════════════════════════════════════════════════ */
+
+function getColumn(name) {
+  return DATA.map(r => r[name]);
+}
+
+function renderKPIs(stats) {
+  $('#kpiMean').textContent   = fmt(stats.mean);
+  $('#kpiMedian').textContent = fmt(stats.median);
+  $('#kpiStd').textContent    = fmt(stats.std);
+  $('#kpiIQR').textContent    = fmt(stats.iqr);
+  $('#kpiSkew').textContent   = fmt(stats.skew);
+  $('#kpiSkewHint').textContent = skewLabel(stats.skew);
+}
+
+/* ── TAB 1 ─────────────────────────────────────────────────────── */
+function renderCentral(s, stats) {
+  const { mean, median, mode, sum, min, max } = stats;
+
+  $('#cMean').textContent   = fmt(mean);
+  $('#cMedian').textContent = fmt(median);
+  $('#cMode').textContent   = fmt(mode.value, 2);
+  $('#cCount').textContent  = fmtInt(s.length);
+
+  $('#tMean').textContent   = fmt(mean, 4);
+  $('#tMedian').textContent = fmt(median, 4);
+  $('#tMode').textContent   = fmt(mode.value, 4) + (mode.count > 1 ? ` (+${mode.count - 1} more)` : '');
+  $('#tSum').textContent    = fmt(sum, 2);
+  $('#tMinMax').textContent = `${fmt(min, 2)} / ${fmt(max, 2)}`;
+
+  const diff = mean - median;
+  const dir = diff > 0.001 ? 'right-tailed (positive skew)'
+            : diff < -0.001 ? 'left-tailed (negative skew)'
+            : 'symmetric';
+  $('#centralNote').innerHTML =
+    `<strong>Mean − Median = ${fmt(diff, 4)}</strong> → the distribution is <strong>${dir}</strong>.` +
+    (mode.count > 1 ? ` ${mode.count} modal values were detected (showing the smallest).` : '');
+
+  // Histogram with lines
+  const { shapes, annotations } = {
+    shapes: [
+      ...vline(mean,   '#f43f5e', 'dash',    `Mean ${fmt(mean, 2)}`).shapes,
+      ...vline(median, '#10b981', 'dot',     `Median ${fmt(median, 2)}`).shapes,
+      ...vline(mode.value, '#f59e0b', 'dashdot', `Mode ${fmt(mode.value, 2)}`).shapes,
+    ],
+    annotations: [
+      ...vline(mean,   '#f43f5e', 'dash',    `Mean ${fmt(mean, 2)}`).annotations,
+      ...vline(median, '#10b981', 'dot',     `Median ${fmt(median, 2)}`).annotations,
+      ...vline(mode.value, '#f59e0b', 'dashdot', `Mode ${fmt(mode.value, 2)}`).annotations,
+    ],
+  };
+
+  Plotly.newPlot('chartCentral', [{
+    type: 'histogram', x: s, nbinsx: state.bins,
+    marker: { color: '#6366f1', line: { color: '#818cf8', width: 1 } },
+    opacity: 0.85,
+    hovertemplate: 'Value: %{x}<br>Count: %{y}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    shapes, annotations,
+    xaxis: { ...PLOT_LAYOUT.xaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: 'Frequency', font: { size: 11 } } },
+    bargap: 0.03,
+  }, PLOT_CONFIG);
+}
+
+/* ── TAB 2 ─────────────────────────────────────────────────────── */
+function renderDispersion(s, stats) {
+  const { mean, std, variance, range, min, max } = stats;
+  const cv = mean !== 0 ? (std / mean) * 100 : NaN;
+  const se = std / Math.sqrt(s.length);
+
+  $('#dRange').textContent    = fmt(range, 3);
+  $('#dVariance').textContent = fmt(variance, 3);
+  $('#dStd').textContent      = fmt(std, 3);
+  $('#dCV').textContent       = Number.isFinite(cv) ? fmt(cv, 2) + ' %' : '—';
+
+  $('#tRange').textContent    = fmt(range, 4);
+  $('#tVariance').textContent = fmt(variance, 4);
+  $('#tVarPop').textContent   = fmt(S.variance(s, 0), 4);
+  $('#tStd').textContent      = fmt(std, 4);
+  $('#tSE').textContent       = fmt(se, 4);
+  $('#tCV').textContent       = Number.isFinite(cv) ? fmt(cv, 2) + ' %' : '—';
+
+  const interp = cv < 15 ? 'low relative variability — values cluster tightly around the mean'
+               : cv < 30 ? 'moderate relative variability'
+               : 'high relative variability — values are widely spread';
+  $('#dispersionNote').innerHTML = `<strong>Coefficient of variation = ${Number.isFinite(cv) ? fmt(cv, 2) : '—'}%</strong> → ${interp}.`;
+
+  // σ bands
+  const band1 = { type: 'rect', xref: 'x', yref: 'paper',
+    x0: mean - std, x1: mean + std, y0: 0, y1: 1,
+    fillcolor: 'rgba(16,185,129,0.14)', line: { width: 0 }, layer: 'below' };
+  const band2 = { type: 'rect', xref: 'x', yref: 'paper',
+    x0: mean - 2 * std, x1: mean + 2 * std, y0: 0, y1: 1,
+    fillcolor: 'rgba(245,158,11,0.10)', line: { width: 0 }, layer: 'below' };
+  const meanLine = { type: 'line', xref: 'x', yref: 'paper',
+    x0: mean, x1: mean, y0: 0, y1: 1,
+    line: { color: '#f43f5e', width: 2 } };
+
+  const bandLabel = (x, text, color) => ({
+    x, y: 1, yref: 'paper', xref: 'x', text, showarrow: false,
+    yanchor: 'bottom', yshift: 6, font: { color, size: 11, family: 'Inter' },
+    bgcolor: 'rgba(11,17,32,.85)', bordercolor: color, borderwidth: 1, borderpad: 3,
+  });
+
+  Plotly.newPlot('chartDispersion', [{
+    type: 'histogram', x: s, nbinsx: state.bins,
+    marker: { color: '#6366f1', line: { color: '#818cf8', width: 1 } },
+    opacity: 0.85,
+    hovertemplate: 'Value: %{x}<br>Count: %{y}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    shapes: [band2, band1, meanLine],
+    annotations: [
+      bandLabel(mean, `μ = ${fmt(mean, 2)}`, '#f43f5e'),
+      bandLabel(mean - std, '−1σ', '#10b981'),
+      bandLabel(mean + std, '+1σ', '#10b981'),
+      bandLabel(mean - 2 * std, '−2σ', '#f59e0b'),
+      bandLabel(mean + 2 * std, '+2σ', '#f59e0b'),
+    ],
+    xaxis: { ...PLOT_LAYOUT.xaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: 'Frequency', font: { size: 11 } } },
+    bargap: 0.03,
+  }, PLOT_CONFIG);
+}
+
+/* ── TAB 3 ─────────────────────────────────────────────────────── */
+function renderSkewness(s, stats) {
+  const { mean, median, skew, kurt } = stats;
+
+  $('#sSkew').textContent = fmt(skew, 4);
+  $('#sKurt').textContent = fmt(kurt, 4);
+  $('#sLabel').textContent = skewLabel(skew);
+
+  $('#smMean').textContent   = fmt(mean, 3);
+  $('#smMedian').textContent = fmt(median, 3);
+  $('#smDiff').textContent   = fmt(mean - median, 3);
+
+  const dir = skew > 0.05 ? 'right-skewed (positive) — a long tail on the high side'
+            : skew < -0.05 ? 'left-skewed (negative) — a long tail on the low side'
+            : 'approximately symmetric';
+  const kurtLabel = kurt > 3 ? 'heavy-tailed (leptokurtic)'
+                  : kurt < -1 ? 'light-tailed (platykurtic)'
+                  : 'mesokurtic (normal-like tails)';
+
+  $('#skewNote').innerHTML =
+    `<strong>Skewness = ${fmt(skew, 4)}</strong> → the distribution is <strong>${dir}</strong>, ` +
+    `and it is <strong>${skewLabel(skew)}</strong>.<br>` +
+    `<strong>Excess kurtosis = ${fmt(kurt, 4)}</strong> → ${kurtLabel}.`;
+
+  // Histogram + mean/median lines
+  const vMean   = vline(mean,   '#f43f5e', 'dash', `Mean ${fmt(mean, 2)}`);
+  const vMedian = vline(median, '#10b981', 'dot',  `Median ${fmt(median, 2)}`);
+
+  Plotly.newPlot('chartSkewHist', [{
+    type: 'histogram', x: s, nbinsx: state.bins,
+    marker: { color: '#a855f7', line: { color: '#c084fc', width: 1 } },
+    opacity: 0.85,
+    hovertemplate: 'Value: %{x}<br>Count: %{y}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    shapes: [...vMean.shapes, ...vMedian.shapes],
+    annotations: [...vMean.annotations, ...vMedian.annotations],
+    xaxis: { ...PLOT_LAYOUT.xaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: 'Frequency', font: { size: 11 } } },
+    bargap: 0.03,
+  }, PLOT_CONFIG);
+
+  // Box plot
+  Plotly.newPlot('chartSkewBox', [{
+    type: 'box', y: s, name: prettyName(state.col),
+    boxpoints: 'outliers',
+    marker: { color: '#10b981', outliercolor: '#ef4444', size: 5 },
+    line: { color: '#10b981', width: 2 },
+    fillcolor: 'rgba(16,185,129,.18)',
+    hovertemplate: '%{y}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+  }, PLOT_CONFIG);
+}
+
+/* ── TAB 4 ─────────────────────────────────────────────────────── */
+function renderIQR(s, stats) {
+  const { q1, q2, q3, iqr, loFence, hiFence, outliers } = stats;
+
+  $('#iQ1').textContent      = fmt(q1, 3);
+  $('#iQ3').textContent      = fmt(q3, 3);
+  $('#iIQR').textContent     = fmt(iqr, 3);
+  $('#iOutCount').textContent = fmtInt(outliers.length);
+
+  $('#tQ1').textContent      = fmt(q1, 4);
+  $('#tQ2').textContent      = fmt(q2, 4);
+  $('#tQ3').textContent      = fmt(q3, 4);
+  $('#tIQR').textContent     = fmt(iqr, 4);
+  $('#tLoFence').textContent = fmt(loFence, 4);
+  $('#tHiFence').textContent = fmt(hiFence, 4);
+
+  const pct = (outliers.length / s.length) * 100;
+  $('#iqrNote').innerHTML =
+    `Values below <strong>${fmt(loFence, 3)}</strong> or above <strong>${fmt(hiFence, 3)}</strong> are outliers ` +
+    `(Tukey's 1.5 × IQR rule). Detected <strong>${outliers.length}</strong> outlier${outliers.length === 1 ? '' : 's'} ` +
+    `(${fmt(pct, 2)} % of data).`;
+
+  // Box plot with fences
+  Plotly.newPlot('chartIQR', [{
+    type: 'box', y: s, name: prettyName(state.col),
+    boxpoints: 'outliers',
+    marker: { color: '#ef4444', outliercolor: '#ef4444', size: 6, line: { color: '#ef4444', width: 1 } },
+    line: { color: '#ef4444', width: 2 },
+    fillcolor: 'rgba(239,68,68,.18)',
+    hovertemplate: '%{y}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    shapes: [
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: hiFence, y1: hiFence,
+        line: { color: '#f59e0b', dash: 'dash', width: 1.5 } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: loFence, y1: loFence,
+        line: { color: '#f59e0b', dash: 'dash', width: 1.5 } },
+    ],
+    annotations: [
+      { x: 1, xref: 'paper', y: hiFence, yref: 'y', text: `Upper fence ${fmt(hiFence, 2)}`,
+        showarrow: false, xanchor: 'right', yanchor: 'bottom',
+        font: { color: '#f59e0b', size: 11 }, bgcolor: 'rgba(11,17,32,.85)', borderpad: 3 },
+      { x: 1, xref: 'paper', y: loFence, yref: 'y', text: `Lower fence ${fmt(loFence, 2)}`,
+        showarrow: false, xanchor: 'right', yanchor: 'top',
+        font: { color: '#f59e0b', size: 11 }, bgcolor: 'rgba(11,17,32,.85)', borderpad: 3 },
+    ],
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+  }, PLOT_CONFIG);
+
+  // Outlier table
+  const container = $('#outlierTable');
+  if (outliers.length === 0) {
+    container.innerHTML = `<div style="padding:16px;color:var(--green);font-size:13px;">
+      ✅ No outliers detected with the 1.5 × IQR rule.</div>`;
+  } else {
+    let html = '<table><thead><tr><th>#</th><th>Value</th><th>Side</th><th>Distance from nearest fence</th></tr></thead><tbody>';
+    outliers.slice(0, 50).forEach((o, i) => {
+      const side = o.value > hiFence ? 'above upper' : 'below lower';
+      const dist = o.value > hiFence ? o.value - hiFence : loFence - o.value;
+      html += `<tr>
+        <td>${o.index + 1}</td>
+        <td>${fmt(o.value, 4)}</td>
+        <td style="color:${o.value > hiFence ? '#ef4444' : '#f59e0b'}">${side}</td>
+        <td>${fmt(dist, 4)}</td>
+      </tr>`;
+    });
+    if (outliers.length > 50) {
+      html += `<tr><td colspan="4" style="text-align:center;color:var(--muted)">… ${outliers.length - 50} more</td></tr>`;
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+}
+
+/* ── TAB 5 ─────────────────────────────────────────────────────── */
+function renderZScore(s, stats) {
+  const zs = s.map(v => (v - stats.mean) / stats.std);
+  const zMean = S.mean(zs);
+  const zStd = S.std(zs, 1);
+  const n2 = zs.filter(z => Math.abs(z) > 2).length;
+  const n3 = zs.filter(z => Math.abs(z) > 3).length;
+
+  $('#zMean').textContent = fmt(zMean, 4);
+  $('#zStd').textContent  = fmt(zStd, 4);
+  $('#z2').textContent    = fmtInt(n2);
+  $('#z3').textContent    = fmtInt(n3);
+
+  // Scatter of z by index, colour by flag
+  const colors = zs.map(z => Math.abs(z) > 3 ? '#ef4444' : Math.abs(z) > 2 ? '#f59e0b' : '#6366f1');
+  const sizes  = zs.map(z => Math.abs(z) > 2 ? 9 : 6);
+
+  Plotly.newPlot('chartZ', [{
+    type: 'scatter', mode: 'markers',
+    x: s.map((_, i) => i + 1), y: zs,
+    marker: { color: colors, size: sizes, line: { width: 0 } },
+    customdata: s,
+    hovertemplate: 'Row %{x}<br>Value: %{customdata}<br>z = %{y:.3f}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    shapes: [
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 0, y1: 0,
+        line: { color: '#64748b', width: 1 } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 2, y1: 2,
+        line: { color: '#f59e0b', dash: 'dash', width: 1 } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: -2, y1: -2,
+        line: { color: '#f59e0b', dash: 'dash', width: 1 } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 3, y1: 3,
+        line: { color: '#ef4444', dash: 'dot', width: 1 } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: -3, y1: -3,
+        line: { color: '#ef4444', dash: 'dot', width: 1 } },
+    ],
+    xaxis: { ...PLOT_LAYOUT.xaxis, title: { text: 'Row index', font: { size: 11 } } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: 'Z-score', font: { size: 11 } } },
+  }, PLOT_CONFIG);
+
+  // Top 10 table
+  const rows = s.map((v, i) => ({ i: i + 1, v, z: zs[i] }));
+  rows.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
+  const top = rows.slice(0, 10);
+
+  let html = '<table><thead><tr><th>Row</th><th>Value</th><th>Z-score</th><th>Flag</th></tr></thead><tbody>';
+  top.forEach(r => {
+    const flag = Math.abs(r.z) > 3 ? '<span style="color:#ef4444">|z| &gt; 3</span>'
+              : Math.abs(r.z) > 2 ? '<span style="color:#f59e0b">|z| &gt; 2</span>'
+              : '<span style="color:var(--muted)">within ±2</span>';
+    html += `<tr><td>${r.i}</td><td>${fmt(r.v, 3)}</td><td class="mono">${fmt(r.z, 4)}</td><td>${flag}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  $('#zTable').innerHTML = html;
+}
+
+/* ── TAB 6 ─────────────────────────────────────────────────────── */
+function renderCorrelation() {
+  const x = getColumn(state.col);
+  const y = getColumn(state.col2);
+
+  const r = S.pearson(x, y);
+  const rho = S.spearman(x, y);
+  const r2 = r * r;
+
+  $('#corrPearson').textContent  = fmt(r, 4);
+  $('#corrSpearman').textContent = fmt(rho, 4);
+  $('#corrR2').textContent       = fmt(r2, 4);
+
+  const dir = r > 0 ? 'positive' : 'negative';
+  $('#corrNote').innerHTML =
+    `<strong>${prettyName(state.col)} ↔ ${prettyName(state.col2)}</strong>: ` +
+    `Pearson <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;">r = ${fmt(r, 4)}</code> → ` +
+    `<strong>${strengthLabel(r)}</strong> ${dir} linear relationship.<br>` +
+    `Spearman ρ = ${fmt(rho, 4)} (rank-based, robust to outliers). ` +
+    `R² = ${fmt(r2, 4)} → the linear model explains <strong>${fmt(r2 * 100, 2)} %</strong> of the variance.<br>` +
+    `<em style="color:var(--muted)">Correlation ≠ causation.</em>`;
+
+  // Correlation matrix
+  const cols = NUMERIC_COLS;
+  const matrix = cols.map(a => cols.map(b => S.pearson(getColumn(a), getColumn(b))));
+  const textMatrix = matrix.map(row => row.map(v => v.toFixed(2)));
+
+  Plotly.newPlot('chartCorrMatrix', [{
+    type: 'heatmap',
+    z: matrix, x: cols.map(prettyName), y: cols.map(prettyName),
+    text: textMatrix, texttemplate: '%{text}',
+    textfont: { size: 11, color: '#e2e8f0' },
+    colorscale: [
+      [0, '#3b82f6'], [0.5, '#0b1120'], [1, '#ef4444'],
+    ],
+    zmin: -1, zmax: 1,
+    colorbar: {
+      thickness: 10, len: 0.8, outlinewidth: 0,
+      tickfont: { color: '#8b9ab5', size: 10 },
+    },
+    hovertemplate: '%{y} ↔ %{x}<br>r = %{z:.3f}<extra></extra>',
+  }], {
+    ...PLOT_LAYOUT,
+    margin: { l: 120, r: 20, t: 20, b: 90 },
+    xaxis: { ...PLOT_LAYOUT.xaxis, tickangle: -35, tickfont: { size: 10.5 } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, tickfont: { size: 10.5 }, autorange: 'reversed' },
+  }, PLOT_CONFIG);
+
+  // Scatter with regression line
+  const mx = S.mean(x), my = S.mean(y);
+  const sx = S.std(x, 1), sy = S.std(y, 1);
+  const slope = r * (sy / sx);
+  const intercept = my - slope * mx;
+  const xmin = Math.min(...x), xmax = Math.max(...x);
+  const lineX = [xmin, xmax];
+  const lineY = [slope * xmin + intercept, slope * xmax + intercept];
+
+  Plotly.newPlot('chartScatter', [
+    {
+      type: 'scatter', mode: 'markers',
+      x, y, name: 'Data',
+      marker: { color: '#6366f1', size: 6, opacity: 0.6, line: { width: 0 } },
+      hovertemplate: `${prettyName(state.col)}: %{x}<br>${prettyName(state.col2)}: %{y}<extra></extra>`,
+    },
+    {
+      type: 'scatter', mode: 'lines',
+      x: lineX, y: lineY, name: 'OLS',
+      line: { color: '#f43f5e', width: 2, dash: 'dash' },
+      hoverinfo: 'skip',
+    },
+  ], {
+    ...PLOT_LAYOUT,
+    showlegend: true,
+    legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(11,17,32,.7)', bordercolor: '#2a3a5c', borderwidth: 1, font: { size: 11 } },
+    xaxis: { ...PLOT_LAYOUT.xaxis, title: { text: prettyName(state.col), font: { size: 11 } } },
+    yaxis: { ...PLOT_LAYOUT.yaxis, title: { text: prettyName(state.col2), font: { size: 11 } } },
+    annotations: [{
+      x: 0.98, y: 0.02, xref: 'paper', yref: 'paper',
+      text: `y = ${slope.toFixed(3)}x + ${intercept.toFixed(3)}`,
+      showarrow: false, xanchor: 'right', yanchor: 'bottom',
+      font: { color: '#f43f5e', size: 11, family: 'JetBrains Mono, monospace' },
+      bgcolor: 'rgba(11,17,32,.85)', bordercolor: '#f43f5e', borderwidth: 1, borderpad: 4,
+    }],
+  }, PLOT_CONFIG);
+
+  $('#scatterTitle').textContent =
+    `${prettyName(state.col)}  vs  ${prettyName(state.col2)}`;
+
+  // Pairwise table
+  let html = '<table class="stat-table"><thead><tr><th></th>' +
+    cols.map(c => `<th>${prettyName(c)}</th>`).join('') + '</tr></thead><tbody>';
+  cols.forEach((a, i) => {
+    html += `<tr><td style="font-weight:600">${prettyName(a)}</td>`;
+    cols.forEach((b, j) => {
+      const v = matrix[i][j];
+      const color = v > 0
+        ? `rgba(239,68,68,${Math.abs(v).toFixed(2)})`
+        : `rgba(59,130,246,${Math.abs(v).toFixed(2)})`;
+      html += `<td class="mono" style="background:${color};color:#fff">${v.toFixed(3)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  $('#corrTable').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   6. MASTER RENDER
+   ══════════════════════════════════════════════════════════════════ */
+function computeStats(col) {
+  const s = getColumn(col);
+  const mean = S.mean(s);
+  const median = S.median(s);
+  const mode = S.mode(s);
+  const variance = S.variance(s, 1);
+  const std = Math.sqrt(variance);
+  const q1 = S.quantile(s, 0.25);
+  const q2 = S.quantile(s, 0.50);
+  const q3 = S.quantile(s, 0.75);
+  const iqr = q3 - q1;
+  const loFence = q1 - 1.5 * iqr;
+  const hiFence = q3 + 1.5 * iqr;
+  const outliers = s
+    .map((v, i) => ({ value: v, index: i }))
+    .filter(o => o.value < loFence || o.value > hiFence);
+  const skew = S.skewness(s);
+  const kurt = S.kurtosis(s);
+  const range = Math.max(...s) - Math.min(...s);
+  const sum = s.reduce((a, b) => a + b, 0);
+
+  return {
+    s, mean, median, mode, variance, std, skew, kurt,
+    q1, q2, q3, iqr, loFence, hiFence, outliers,
+    range, min: Math.min(...s), max: Math.max(...s), sum,
+  };
+}
+
+function renderAll() {
+  const stats = computeStats(state.col);
+
+  renderKPIs(stats);
+  renderCentral(stats.s, stats);
+  renderDispersion(stats.s, stats);
+  renderSkewness(stats.s, stats);
+  renderIQR(stats.s, stats);
+  renderZScore(stats.s, stats);
+  renderCorrelation();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   7. EVENT WIRING
+   ══════════════════════════════════════════════════════════════════ */
+el.colSelect.addEventListener('change', e => {
+  state.col = e.target.value;
+  refreshCol2Options();
+  renderAll();
+});
+
+el.col2Select.addEventListener('change', e => {
+  state.col2 = e.target.value;
+  renderCorrelation();
+});
+
+el.binsRange.addEventListener('input', e => {
+  state.bins = +e.target.value;
+  el.binsVal.textContent = state.bins;
+  const stats = computeStats(state.col);
+  renderCentral(stats.s, stats);
+  renderDispersion(stats.s, stats);
+  renderSkewness(stats.s, stats);
+});
+
+/* Tabs */
+$$('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    $$('.tab').forEach(x => x.classList.remove('active'));
+    $$('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('#panel-' + t.dataset.tab).classList.add('active');
+    // let Plotly recalc size after the panel becomes visible
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 60);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   8. BOOT
+   ══════════════════════════════════════════════════════════════════ */
+refreshCol2Options();
+renderAll();
+
+/* Re-render charts on window resize (Plotly's responsive handles most, this is belt & braces) */
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    ['chartCentral', 'chartDispersion', 'chartSkewHist', 'chartSkewBox',
+     'chartIQR', 'chartZ', 'chartCorrMatrix', 'chartScatter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.data) Plotly.Plots.resize(el);
+    });
+  }, 150);
+});
+</script>
+</body>
+</html>
